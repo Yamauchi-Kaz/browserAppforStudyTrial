@@ -1,0 +1,169 @@
+:root {
+  --bg: #1d1b3a;
+  --bg2: #2c2960;
+  --panel: rgba(255, 255, 255, 0.08);
+  --text: #fffdf5;
+  --muted: #c9c5f0;
+  --accent: #ffcc33;
+  --good: #3ddc84;
+  --bad: #ff5c6c;
+  --enemy-hp: #ff7a45;
+  --player-hp: #3ddc84;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg) 70%);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", system-ui, sans-serif;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+h1 { text-align: center; font-size: clamp(28px, 7vw, 44px); margin: 16px 0 8px; }
+h2 { font-size: 18px; margin: 0 0 10px; color: var(--accent); }
+.lead { text-align: center; color: var(--muted); line-height: 1.7; }
+
+.panel {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip input { display: none; }
+.chip span {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.chip input:checked + span { background: var(--accent); border-color: var(--accent); color: #2a2200; font-weight: bold; }
+
+.btn {
+  font: inherit;
+  font-weight: bold;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #2a2200;
+  cursor: pointer;
+}
+.btn:active { transform: translateY(2px); }
+.btn.big { display: block; width: 100%; font-size: 24px; padding: 16px; margin-top: 8px; }
+.btn.mic { background: #8e7dff; color: white; }
+.btn.mic.listening { background: var(--bad); animation: pulse 1s infinite; }
+
+/* バトル */
+.status-row { display: flex; justify-content: space-between; color: var(--muted); }
+
+.enemy-area { position: relative; text-align: center; padding: 8px 0; }
+.enemy-name { font-size: 20px; font-weight: bold; }
+.enemy { font-size: clamp(90px, 25vw, 140px); line-height: 1.2; transition: transform 0.1s; }
+.enemy.hit { animation: hit 0.4s; }
+.enemy.attack { animation: attack 0.5s; }
+.enemy.defeated { animation: defeated 0.8s forwards; }
+
+.hpbar {
+  position: relative;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 6px auto;
+}
+.hpbar.enemy { max-width: 320px; }
+.hpfill { height: 100%; width: 100%; transition: width 0.4s; }
+.hpbar.enemy .hpfill { background: var(--enemy-hp); }
+.hpbar.player .hpfill { background: var(--player-hp); }
+.hpbar span { position: absolute; inset: 0; font-size: 13px; line-height: 20px; text-align: center; }
+
+.damage-pop {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+  font-size: clamp(24px, 7vw, 40px);
+  font-weight: bold;
+  color: var(--accent);
+  text-shadow: 0 2px 0 #000;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.damage-pop.show { animation: pop 0.9s forwards; }
+
+.question-box { background: var(--panel); border-radius: 16px; padding: 14px 16px; }
+.subject-tag { font-size: 14px; color: var(--accent); }
+.question { font-size: clamp(20px, 5vw, 28px); font-weight: bold; margin: 6px 0 12px; line-height: 1.5; }
+.timer { height: 10px; background: rgba(0, 0, 0, 0.4); border-radius: 5px; overflow: hidden; }
+.timer-fill { height: 100%; width: 100%; background: var(--good); }
+.timer-fill.warn { background: var(--accent); }
+.timer-fill.danger { background: var(--bad); }
+
+.answer-row { display: flex; gap: 8px; margin-top: 12px; }
+.answer-row input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 22px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 3px solid var(--muted);
+  background: #fff;
+  color: #222;
+}
+.answer-row input:focus { outline: none; border-color: var(--accent); }
+
+.feedback { min-height: 28px; margin: 10px 0; text-align: center; font-size: 18px; font-weight: bold; }
+.feedback.good { color: var(--good); }
+.feedback.bad { color: var(--bad); }
+.feedback.close { color: var(--accent); }
+
+.player-area { margin-top: 8px; }
+.player-label { font-weight: bold; }
+#combo { color: var(--accent); margin-left: 8px; }
+
+.mark {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50vmin;
+  font-weight: bold;
+  pointer-events: none;
+  opacity: 0;
+}
+.mark.show { animation: mark 0.7s forwards; }
+.mark.good { color: var(--good); }
+.mark.bad { color: var(--bad); }
+
+body.shake #app { animation: shake 0.4s; }
+
+/* 結果 */
+.result p { font-size: 20px; margin: 8px 0; }
+#review-list { padding-left: 20px; line-height: 1.8; }
+
+@keyframes hit { 0%, 100% { transform: translateX(0); filter: none; } 25% { transform: translateX(-12px); filter: brightness(2); } 75% { transform: translateX(12px); } }
+@keyframes attack { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4) translateY(30px); } }
+@keyframes defeated { to { transform: scale(0.2) rotate(360deg); opacity: 0; } }
+@keyframes pop { 0% { opacity: 0; top: 45%; } 20% { opacity: 1; } 100% { opacity: 0; top: 5%; } }
+@keyframes mark { 0% { opacity: 0; transform: scale(0.5); } 30% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; } }
+@keyframes shake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-8px, 4px); } 40% { transform: translate(8px, -4px); } 60% { transform: translate(-6px, 2px); } 80% { transform: translate(6px, -2px); } }
+@keyframes pulse { 50% { opacity: 0.6; } }

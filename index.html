@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>こたえてバトル</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <!-- タイトル画面 -->
+    <section id="screen-title" class="screen active">
+      <h1>⚔️ こたえてバトル ⚔️</h1>
+      <p class="lead">問題に日本語でこたえて、モンスターをたおそう！<br>はやくこたえるほど、大ダメージ！</p>
+
+      <div class="panel">
+        <h2>きょうか をえらぼう</h2>
+        <div id="subject-list" class="chips"></div>
+      </div>
+
+      <div class="panel">
+        <h2>むずかしさ</h2>
+        <div class="chips" id="level-list">
+          <label class="chip"><input type="radio" name="level" value="easy"><span>やさしい（30びょう）</span></label>
+          <label class="chip"><input type="radio" name="level" value="normal" checked><span>ふつう（20びょう）</span></label>
+          <label class="chip"><input type="radio" name="level" value="hard"><span>むずかしい（12びょう）</span></label>
+        </div>
+      </div>
+
+      <button id="btn-start" class="btn big">スタート！</button>
+    </section>
+
+    <!-- バトル画面 -->
+    <section id="screen-battle" class="screen">
+      <div class="status-row">
+        <div class="stage" id="stage-label">ステージ 1</div>
+        <div class="score">スコア <span id="score">0</span></div>
+      </div>
+
+      <div class="enemy-area">
+        <div class="enemy-name" id="enemy-name">スライム</div>
+        <div class="hpbar enemy"><div class="hpfill" id="enemy-hp-fill"></div><span id="enemy-hp-text"></span></div>
+        <div class="enemy" id="enemy-sprite">🟢</div>
+        <div class="damage-pop" id="damage-pop"></div>
+      </div>
+
+      <div class="question-box">
+        <div class="subject-tag" id="subject-tag"></div>
+        <div class="question" id="question-text"></div>
+        <div class="timer"><div class="timer-fill" id="timer-fill"></div></div>
+      </div>
+
+      <form id="answer-form" class="answer-row" autocomplete="off">
+        <input id="answer-input" type="text" placeholder="こたえを入力してね" enterkeyhint="send">
+        <button type="button" id="btn-mic" class="btn mic" title="声でこたえる" hidden>🎤</button>
+        <button type="submit" class="btn">こたえる</button>
+      </form>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="player-area">
+        <div class="player-label">きみ 🧒 <span id="combo"></span></div>
+        <div class="hpbar player"><div class="hpfill" id="player-hp-fill"></div><span id="player-hp-text"></span></div>
+      </div>
+
+      <div class="mark" id="mark"></div>
+    </section>
+
+    <!-- 結果画面 -->
+    <section id="screen-result" class="screen">
+      <h1 id="result-title"></h1>
+      <div class="panel result">
+        <p>スコア：<strong id="result-score">0</strong></p>
+        <p>せいかい：<strong id="result-correct">0</strong> もん ／ じかんぎれ：<strong id="result-timeout">0</strong> かい</p>
+        <p>たおしたモンスター：<strong id="result-defeated">0</strong> ひき</p>
+      </div>
+      <div class="panel" id="review-panel">
+        <h2>まちがえた問題をふりかえろう</h2>
+        <ul id="review-list"></ul>
+      </div>
+      <button id="btn-retry" class="btn big">もういちど</button>
+    </section>
+  </main>
+
+  <script src="js/judge.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
