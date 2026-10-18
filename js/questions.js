@@ -1,6 +1,7 @@
 // 問題データ
 // type: 'text'   … answers のどれかに合えば正解（漢字・ひらがな・別の言い方を並べておく）
 // type: 'number' … value と同じ数なら正解（「12こ」「十二」などもOK）
+// speak: 読み上げるときの文（ないときは問題文をそのまま読む）。読むと答えがわかってしまう問題に使う
 // voice: 声でこたえたとき、音声認識が同じ読みの別の書き方に変えてしまうもの。これも正解にする
 //        （例: 「そら」と言うと「空」になる。読み方の問題では、その漢字そのものも正解にする）
 (function (root) {
@@ -19,10 +20,10 @@
   // answers の1つ目は、時間ぎれのときに「こたえは〇〇」と見せる書き方（ひらがなにしておく）。
   const FIXED = [
     // こくご（「山」のように、読み方をきく漢字にはふりがなを付けない）
-    { subject: 'japanese', q: '「山」の よみかたは？（ひらがなで）', type: 'text', answers: ['やま', 'さん'], voice: ['山', '3', '三'] },
-    { subject: 'japanese', q: '「川」の よみかたは？（ひらがなで）', type: 'text', answers: ['かわ'], voice: ['川', '河', '皮', '革'] },
-    { subject: 'japanese', q: '「花」の よみかたは？（ひらがなで）', type: 'text', answers: ['はな'], voice: ['花', '鼻', '華'] },
-    { subject: 'japanese', q: '「空」の よみかたは？（ひらがなで）', type: 'text', answers: ['そら', 'くう', 'から'], voice: ['空'] },
+    { subject: 'japanese', q: '「山」の よみかたは？（ひらがなで）', speak: 'この かんじの よみかたは なにかな？', type: 'text', answers: ['やま', 'さん'], voice: ['山', '3', '三'] },
+    { subject: 'japanese', q: '「川」の よみかたは？（ひらがなで）', speak: 'この かんじの よみかたは なにかな？', type: 'text', answers: ['かわ'], voice: ['川', '河', '皮', '革'] },
+    { subject: 'japanese', q: '「花」の よみかたは？（ひらがなで）', speak: 'この かんじの よみかたは なにかな？', type: 'text', answers: ['はな'], voice: ['花', '鼻', '華'] },
+    { subject: 'japanese', q: '「空」の よみかたは？（ひらがなで）', speak: 'この かんじの よみかたは なにかな？', type: 'text', answers: ['そら', 'くう', 'から'], voice: ['空'] },
     { subject: 'japanese', q: '「{大|おお}きい」の はんたいの ことばは？', type: 'text', answers: ['ちいさい', '小さい'] },
     { subject: 'japanese', q: '「あつい」の はんたいの ことばは？（てんきの こと）', type: 'text', answers: ['さむい', '寒い'] },
     { subject: 'japanese', q: '「{早|はや}い」の はんたいの ことばは？', type: 'text', answers: ['おそい', '遅い'] },

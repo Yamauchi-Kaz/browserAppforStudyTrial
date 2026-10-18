@@ -42,6 +42,9 @@
           <label class="chip"><input type="radio" name="mode" id="mode-keyboard" value="keyboard" checked><span>⌨️ キーボード</span></label>
           <label class="chip"><input type="radio" name="mode" id="mode-voice" value="voice"><span>🎤 おはなし（こえで こたえる）</span></label>
         </div>
+        <div class="chips" id="read-panel">
+          <label class="chip"><input type="checkbox" id="opt-read" checked><span>🔈 もんだいを よみあげる</span></label>
+        </div>
         <p class="note" id="voice-note" hidden>この ブラウザーでは こえで こたえられません。Chrome・Edge・Safari で ひらいてね。</p>
       </div>
 
@@ -65,7 +68,10 @@
       </div>
 
       <div class="question-box">
-        <div class="subject-tag" id="subject-tag"></div>
+        <div class="q-head">
+          <div class="subject-tag" id="subject-tag"></div>
+          <button type="button" id="btn-read" class="read-btn" aria-label="もんだいを もういちど よむ" hidden>🔈 もういちど</button>
+        </div>
         <div class="question" id="question-text"></div>
         <div class="timer"><div class="timer-fill" id="timer-fill"></div></div>
       </div>
@@ -106,6 +112,7 @@
   <script src="js/judge.js"></script>
   <script src="js/stage.js"></script>
   <script src="js/audio.js"></script>
+  <script src="js/speaker.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/game.js"></script>
 </body>

@@ -126,6 +126,14 @@ h2 { font-size: 18px; margin: 0 0 10px; color: var(--accent); }
 
 .question-box { background: var(--panel); border-radius: 16px; padding: 14px 16px; }
 .subject-tag { font-size: 14px; color: var(--accent); }
+.q-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.read-btn {
+  font: inherit; font-size: 14px; font-weight: 800;
+  padding: 6px 12px; border-radius: 999px; border: 2px solid var(--muted);
+  background: transparent; color: var(--text); cursor: pointer;
+}
+.read-btn.speaking { border-color: var(--accent); color: var(--accent); animation: pulse 1s infinite; }
+#read-panel { margin-top: 10px; }
 .question { font-size: clamp(20px, 5vw, 28px); font-weight: bold; margin: 6px 0 12px; line-height: 1.9; }
 rt { font-size: 0.5em; font-weight: 800; color: var(--accent); }
 .timer { height: 10px; background: rgba(0, 0, 0, 0.4); border-radius: 5px; overflow: hidden; }

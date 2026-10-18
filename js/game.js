@@ -5,6 +5,7 @@
   const { SUBJECTS, createQuestionDeck, parseRuby } = window.Questions;
   const { judge } = window.Judge;
   const Sound = window.Sound;
+  const Speaker = window.Speaker; // 読み上げ（使えないブラウザーでは null）
 
   const LEVELS = {
     easy: { time: 30 },
@@ -45,6 +46,9 @@
     form: $('answer-form'),
     input: $('answer-input'),
     mic: $('btn-mic'),
+    read: $('btn-read'),
+    optRead: $('opt-read'),
+    readPanel: $('read-panel'),
     heard: $('heard'),
     modeVoice: $('mode-voice'),
     voiceNote: $('voice-note'),
@@ -162,9 +166,13 @@
     Sound.play('start');
     const level = document.querySelector('input[name="level"]:checked').value;
     const voiceMode = !!listener && el.modeVoice.checked;
+    const readAloud = !!Speaker && el.optRead.checked;
+    if (readAloud) Speaker.unlock();
     state = {
       level,
       voiceMode,
+      readAloud,
+      reading: false,
       timeLimit: LEVELS[level].time,
       nextQuestion: createQuestionDeck(subjects, level),
       hp: PLAYER_MAX_HP,
@@ -246,14 +254,53 @@
     el.input.disabled = false;
     if (!state.voiceMode) el.input.focus();
     setFeedback('');
-    if (state.voiceMode) {
-      el.heard.textContent = '🎤 きいてるよ… こたえを いってね';
-      listener.start();
-    }
+    el.heard.textContent = '';
     state.startedAt = performance.now();
     clearInterval(timerId);
     timerId = setInterval(tick, 50);
     tick();
+    if (state.readAloud) readQuestion(true);
+    else startListening();
+  }
+
+  function startListening() {
+    if (!state.voiceMode || state.locked) return;
+    el.heard.textContent = '🎤 きいてるよ… こたえを いってね';
+    listener.start();
+  }
+
+  // 読み上げる文。ふりがなの読みを使い、計算の記号はことばにする
+  function speechText(q) {
+    if (q.speak) return q.speak;
+    return parseRuby(q.q).map((p) => p.ruby || p.text).join('')
+      .replace(/＋/g, ' たす ')
+      .replace(/−/g, ' ひく ')
+      .replace(/＝\s*？/g, ' は？')
+      .replace(/[「」（）]/g, '、');
+  }
+
+  // pauseTimer: 最初の読み上げのあいだは、時間をへらさない
+  function readQuestion(pauseTimer) {
+    const s = state;
+    const q = state.question;
+    state.reading = pauseTimer;
+    if (listener) listener.stop(); // 読み上げの声を、こたえとして聞きとらないように
+    Sound.setDuck(true);
+    el.read.classList.add('speaking');
+    Speaker.speak(speechText(q)).then(() => {
+      if (state !== s) return;
+      el.read.classList.remove('speaking');
+      if (state.question !== q || state.locked) return;
+      state.reading = false;
+      Sound.setDuck(state.voiceMode);
+      startListening();
+    });
+  }
+
+  function stopReading() {
+    if (Speaker) Speaker.cancel();
+    if (state) state.reading = false;
+    el.read.classList.remove('speaking');
   }
 
   function remainingRatio() {
@@ -262,6 +309,7 @@
   }
 
   function tick() {
+    if (state.reading) state.startedAt = performance.now(); // 読み上げちゅうは時間をとめる
     const r = remainingRatio();
     el.timerFill.style.width = r * 100 + '%';
     el.timerFill.className = 'timer-fill' + (r < 0.25 ? ' danger' : r < 0.5 ? ' warn' : '');
@@ -308,6 +356,7 @@
 
   function onCorrect() {
     state.locked = true;
+    stopReading();
     if (listener) listener.stop();
     clearInterval(timerId);
     battleStage.setDanger(false);
@@ -344,6 +393,8 @@
     state.combo = 0;
     state.mistakes.push({ q: state.question.q, a: answerText(state.question) });
     setFeedback(`じかんぎれ！ こたえは「${answerText(state.question)}」`, 'bad');
+    stopReading();
+    if (state.readAloud) later(() => Speaker.speak(`こたえは、${answerText(state.question)}`), 700);
 
     Sound.play('enemyAttack');
     const s = state;
@@ -381,6 +432,7 @@
 
   function endGame(win) {
     clearInterval(timerId);
+    stopReading();
     if (listener) listener.stop();
     state.locked = true;
     Sound.setDuck(false);
@@ -495,8 +547,22 @@
     el.sound.setAttribute('aria-label', Sound.muted ? '音を出す' : '音を消す');
   }
 
+  // ---------- 読み上げボタン ----------
+  function setupReadAloud() {
+    if (!Speaker) {
+      el.readPanel.hidden = true;
+      return;
+    }
+    el.read.hidden = false;
+    el.read.addEventListener('click', () => {
+      if (!state || state.locked || !state.question) return;
+      readQuestion(false);
+    });
+  }
+
   // ---------- 初期化 ----------
   renderSubjects();
+  setupReadAloud();
   setupVoice();
   renderSoundButton();
   cycleTitleMonster();
