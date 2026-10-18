@@ -76,29 +76,21 @@
   }
 
   // さんすうは毎回ランダムに作る
+  // メインは 1けた±1けた。ときどき応用で「10〜19 ± 1けた」（たし算の答えは20まで）
+  const APPLIED_RATE = { easy: 0.1, normal: 0.3, hard: 0.5 };
+
   function makeMathQuestion(level) {
-    const kinds = level === 'easy' ? ['add', 'sub'] : level === 'hard' ? ['add', 'sub', 'mul', 'div', 'word'] : ['add', 'sub', 'mul', 'word'];
-    const kind = kinds[rand(0, kinds.length - 1)];
-    const big = level === 'hard' ? 99 : level === 'easy' ? 9 : 30;
+    const applied = Math.random() < (APPLIED_RATE[level] ?? APPLIED_RATE.normal);
+    const add = Math.random() < 0.5;
     let a, b;
-    switch (kind) {
-      case 'add':
-        a = rand(1, big); b = rand(1, big);
-        return { subject: 'math', q: `${a} ＋ ${b} ＝ ？`, type: 'number', value: a + b };
-      case 'sub':
-        a = rand(2, big); b = rand(1, a);
-        return { subject: 'math', q: `${a} − ${b} ＝ ？`, type: 'number', value: a - b };
-      case 'mul':
-        a = rand(2, 9); b = rand(2, 9);
-        return { subject: 'math', q: `${a} × ${b} ＝ ？`, type: 'number', value: a * b };
-      case 'div':
-        b = rand(2, 9); a = b * rand(2, 9);
-        return { subject: 'math', q: `${a} ÷ ${b} ＝ ？`, type: 'number', value: a / b };
-      default: {
-        const per = rand(2, 6), people = rand(2, 5);
-        return { subject: 'math', q: `1人に${per}こずつ、${people}人にあめをくばります。あめは全部で何こ？`, type: 'number', value: per * people };
-      }
+    if (add) {
+      if (applied) { a = rand(10, 19); b = rand(1, Math.min(9, 20 - a)); } // 例: 12 ＋ 5
+      else { a = rand(1, 9); b = rand(1, 9); } // 例: 3 ＋ 5
+      return { subject: 'math', q: `${a} ＋ ${b} ＝ ？`, type: 'number', value: a + b };
     }
+    if (applied) { a = rand(10, 19); b = rand(1, 9); } // 例: 15 − 7
+    else { a = rand(2, 9); b = rand(1, a); } // 例: 8 − 3
+    return { subject: 'math', q: `${a} − ${b} ＝ ？`, type: 'number', value: a - b };
   }
 
   // えらんだ教科から、同じ問題が続かないように出題する

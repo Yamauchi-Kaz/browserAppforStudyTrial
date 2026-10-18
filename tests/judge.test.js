@@ -64,6 +64,19 @@ test('数の答え', () => {
   assert.strictEqual(extractNumber('三万五千'), 35000);
 });
 
+test('さんすうは 1けた±1けた と 10〜19±1けた だけ', () => {
+  for (let i = 0; i < 2000; i++) {
+    for (const level of ['easy', 'normal', 'hard']) {
+      const q = makeMathQuestion(level);
+      const [, a, op, b] = q.q.match(/(\d+) (.) (\d+)/).map((x, j) => (j === 2 ? x : Number(x)));
+      assert.ok(b >= 1 && b <= 9, q.q);
+      assert.ok(a >= 1 && a <= 19, q.q);
+      if (op === '＋') assert.ok(a <= 9 || a + b <= 20, q.q);
+      else assert.ok(a - b >= 0, q.q);
+    }
+  }
+});
+
 test('問題データの正解は全部、自分自身で正解になる', () => {
   for (const q of FIXED) {
     if (q.type === 'number') ok(String(q.value), q);
