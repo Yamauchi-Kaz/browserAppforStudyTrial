@@ -130,7 +130,8 @@
   function startGame() {
     const subjects = [...el.subjectList.querySelectorAll('input:checked')].map((i) => i.value);
     if (subjects.length === 0) {
-      alert('きょうかを1つ以上えらんでね');
+      el.start.textContent = 'きょうかを1つ以上えらんでね';
+      setTimeout(() => { el.start.textContent = 'スタート！'; }, 1500);
       return;
     }
     const level = document.querySelector('input[name="level"]:checked').value;
