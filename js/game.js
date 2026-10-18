@@ -35,6 +35,10 @@
     retry: $('btn-retry'),
     sound: $('btn-sound'),
     stageLabel: $('stage-label'),
+    quit: $('btn-quit'),
+    quitModal: $('quit-modal'),
+    quitYes: $('btn-quit-yes'),
+    quitNo: $('btn-quit-no'),
     score: $('score'),
     enemyName: $('enemy-name'),
     enemyHpFill: $('enemy-hp-fill'),
@@ -197,7 +201,9 @@
     el.timerFill.style.width = '100%';
     if (voiceMode) {
       // スタートボタンを押したタイミングでマイクの許可をもらっておく
+      const s = state;
       requestMicPermission().then((ok) => {
+        if (state !== s) return; // とちゅうで やめたとき
         if (!ok) disableVoiceMode('マイクが つかえないので、キーボードで こたえてね');
         spawnEnemy();
       });
@@ -323,6 +329,7 @@
   }
 
   function tick() {
+    if (state.paused) return; // 「やめる？」を出しているあいだは時間をとめる
     if (state.reading) state.startedAt = performance.now(); // 読み上げちゅうは時間をとめる
     const r = remainingRatio();
     el.timerFill.style.width = r * 100 + '%';
@@ -430,7 +437,9 @@
     Sound.play('defeat');
     showBanner(`${state.enemy.name} をたおした！`);
     setFeedback('');
+    const s = state;
     battleStage.defeat().then(() => {
+      if (state !== s) return; // とちゅうで やめたとき
       if (state.enemyIndex + 1 >= ENEMIES.length) {
         later(() => endGame(true), 600);
         return;
@@ -598,6 +607,51 @@
     renderSoundButton();
   });
   el.start.addEventListener('click', startGame);
+  // ---------- とちゅうで やめる ----------
+  function openQuit() {
+    if (!state || state.paused) return;
+    state.paused = true;
+    state.pausedAt = performance.now();
+    if (listener) listener.stop();
+    stopReading();
+    Sound.play('click');
+    el.quitModal.hidden = false;
+    el.quitNo.focus();
+  }
+
+  function resumeGame() {
+    if (!state || !state.paused) return;
+    // とまっていたぶん、問題の始まりをうしろにずらす（とまっているあいだに次の問題が出ていても、時間がふえすぎないように）
+    const now = performance.now();
+    state.startedAt = Math.min(state.startedAt + (now - state.pausedAt), now);
+    state.paused = false;
+    el.quitModal.hidden = true;
+    Sound.play('click');
+    if (state.question && !state.locked) startListening();
+  }
+
+  function quitGame() {
+    clearInterval(timerId);
+    if (listener) listener.stop();
+    stopReading();
+    battleStage.setDanger(false);
+    state = null; // later() で予約していた動きも、これで止まる
+    el.quitModal.hidden = true;
+    Sound.setDuck(false);
+    Sound.play('click');
+    Sound.bgm('title');
+    showScreen('title');
+  }
+
+  el.quit.addEventListener('click', openQuit);
+  el.quitNo.addEventListener('click', resumeGame);
+  el.quitYes.addEventListener('click', quitGame);
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !state) return;
+    if (state.paused) resumeGame();
+    else if ($('screen-battle').classList.contains('active')) openQuit();
+  });
+
   el.retry.addEventListener('click', () => {
     Sound.play('click');
     Sound.bgm('title');
