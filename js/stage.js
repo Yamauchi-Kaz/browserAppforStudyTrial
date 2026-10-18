@@ -427,6 +427,17 @@
     volcano: { sky: ['#2a0606', '#b71c1c'], far: '#4e1010', near: '#250606', ground: '#3b0d0d', particle: 'ember', pcolor: '#ff9100', lightning: true, moon: '#ffab91' },
   };
 
+  // ---------- 画像（js/art.js に書いたもの。読みこめたものだけ使う） ----------
+  const IMAGES = { monsters: {}, backgrounds: {} };
+  const ART = root.ART || {};
+  for (const kind of ['monsters', 'backgrounds']) {
+    for (const [key, src] of Object.entries(ART[kind] || {})) {
+      const img = new Image();
+      img.onload = () => { IMAGES[kind][key] = img; };
+      img.src = src;
+    }
+  }
+
   function hills(ctx, w, h, baseY, amp, freq, phase, color) {
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -509,7 +520,8 @@
 
     setMonster(key) {
       this.monsterKey = key;
-      this.theme = THEMES[MONSTERS[key].theme];
+      this.themeKey = MONSTERS[key].theme;
+      this.theme = THEMES[this.themeKey];
       this.ambient = [];
       this.danger = false;
       this.flash = 0;
@@ -546,6 +558,8 @@
       const c = this.center;
       this.flash = 1;
       this.knock = 1;
+      this.freezeUntil = performance.now() + (critical ? 140 : 80);
+      this.shake = critical ? 12 : 6;
       if (this.mode === 'idle' || this.mode === 'taunt') this.setMode('idle');
       this.burst(c.x, c.y, critical ? 30 : 16, critical ? '#ffdd33' : '#ffffff');
       if (critical) this.slash = 1;
@@ -562,6 +576,7 @@
     // 敵のこうげき。こうげきが当たったときに resolve する
     enemyAttack() {
       this.setMode('attack');
+      setTimeout(() => { this.shake = 16; }, 330);
       const fx = MONSTERS[this.monsterKey].attackFx;
       const c = this.center;
       const colors = fx === 'fire' ? ['#ff6d00', '#ffd600', '#ff3d00'] : fx === 'magic' ? ['#e040fb', '#ea80fc', '#7c4dff'] : null;
@@ -607,7 +622,12 @@
       if (!this.resize()) return;
       const t = now / 1000;
       const ctx = this.ctx;
-      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      // 画面のゆれ
+      const sx = this.shake ? (Math.random() - 0.5) * this.shake : 0;
+      const sy = this.shake ? (Math.random() - 0.5) * this.shake : 0;
+      this.shake = Math.max(0, (this.shake || 0) - dt * 60);
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, sx * this.dpr, sy * this.dpr);
+      ctx.clearRect(-20, -20, this.w + 40, this.h + 40);
 
       this.drawBackground(ctx, t, dt);
       this.drawMonster(t, now);
@@ -649,19 +669,33 @@
     drawBackground(ctx, t, dt) {
       const th = this.theme;
       const w = this.w, h = this.h;
-      const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, th.sky[0]);
-      g.addColorStop(1, th.sky[1]);
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
-      if (th.moon) ellipse(ctx, w * 0.82, h * 0.24, 22, 22, th.moon);
       const drift = this.reduceMotion ? 0 : t;
-      hills(ctx, w, h, h * 0.6, 18, 0.012, drift * 0.05, th.far);
-      hills(ctx, w, h, h * 0.75, 12, 0.02, 1.5 + drift * 0.12, th.near);
-      ctx.fillStyle = th.ground;
-      ctx.fillRect(0, h * 0.86, w, h * 0.14);
-      if (th.particle === 'bubble') {
-        for (let x = 0; x < w; x += 30) line(ctx, x + ((t * 20) % 30), h * 0.9, x + ((t * 20) % 30) + 12, h * 0.9, 'rgba(255,255,255,0.5)', 3);
+      const bg = IMAGES.backgrounds[this.themeKey];
+      if (bg) {
+        // 画面をうめるように少し大きめに描き、ゆっくり左右に動かして奥行きを出す
+        const zoom = 1.08;
+        const s = Math.max(w / bg.width, h / bg.height) * zoom;
+        const bw = bg.width * s, bh = bg.height * s;
+        const x = (w - bw) / 2 + Math.sin(drift * 0.12) * (bw - w) * 0.4;
+        const y = h - bh + (bh - h) * 0.15;
+        ctx.drawImage(bg, x, y, bw, bh);
+        // モンスターが目立つように、まわりを少し暗くする
+        const vg = ctx.createRadialGradient(w / 2, h * 0.6, h * 0.3, w / 2, h * 0.6, h);
+        vg.addColorStop(0, 'rgba(0,0,0,0)');
+        vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+        ctx.fillStyle = vg;
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, th.sky[0]);
+        g.addColorStop(1, th.sky[1]);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+        if (th.moon) ellipse(ctx, w * 0.82, h * 0.24, 22, 22, th.moon);
+        hills(ctx, w, h, h * 0.6, 18, 0.012, drift * 0.05, th.far);
+        hills(ctx, w, h, h * 0.75, 12, 0.02, 1.5 + drift * 0.12, th.near);
+        ctx.fillStyle = th.ground;
+        ctx.fillRect(0, h * 0.86, w, h * 0.14);
       }
       if (th.lightning && !this.reduceMotion && Math.random() < dt * 0.25) this.lightning = 1;
 
@@ -698,6 +732,10 @@
       if (!m || this.mode === 'none') return;
       const p = (now - this.modeStart) / 1000;
       const k = this.scale * (m.size || 1);
+      // ヒットストップ: 当たった瞬間は 動きを少しだけ止めて、手ごたえを出す
+      if (now < this.freezeUntil) t = this.frozenT;
+      else this.frozenT = t;
+      const mt = t;
       const pose = Object.assign({ x: 0, y: 0, sx: 1, sy: 1, rot: 0, shadow: 1 }, this.reduceMotion ? {} : m.pose(t));
       let ox = pose.x * k, oy = pose.y * k, sc = 1, rot = pose.rot, alpha = 1;
 
@@ -706,10 +744,18 @@
         oy -= (1 - easeOutBounce(q)) * this.h;
         if (q >= 1) this.setMode('idle');
       } else if (this.mode === 'attack') {
-        const q = Math.min(p / 0.6, 1);
-        const s = Math.sin(q * Math.PI);
-        sc = 1 + s * 0.45;
-        oy += s * 50 * k;
+        // 0〜0.25: うしろにためる → 0.25〜0.55: とびかかる → もどる
+        const q = Math.min(p / 0.75, 1);
+        if (q < 0.25) {
+          const a = q / 0.25;
+          sc = 1 - 0.1 * a;
+          oy -= 20 * k * a;
+          rot -= 0.08 * a;
+        } else {
+          const s = Math.sin(((q - 0.25) / 0.75) * Math.PI);
+          sc = 0.9 + s * 0.6;
+          oy += s * 60 * k - 20 * k * (1 - s);
+        }
         if (q >= 1) this.setMode('idle');
       } else if (this.mode === 'taunt') {
         const q = Math.min(p / 0.7, 1);
@@ -755,7 +801,17 @@
       o.translate(0, pivot);
       o.scale(k * sc * pose.sx, k * sc * pose.sy);
       o.lineJoin = 'round';
-      m.draw(o, t);
+      const img = IMAGES.monsters[this.monsterKey];
+      if (img) {
+        // 画像は足もとを (0,0) にあわせ、高さ m.height で描く。呼吸するように少しふくらませる
+        const breathe = this.reduceMotion ? 0 : Math.sin(mt * 2.2) * 0.025;
+        const dh = m.height * (m.imageScale || 1.15);
+        const dw = dh * (img.width / img.height);
+        o.scale(1 - breathe * 0.5, 1 + breathe);
+        o.drawImage(img, -dw / 2, -dh, dw, dh);
+      } else {
+        m.draw(o, mt);
+      }
       o.restore();
       if (this.flash > 0 || (this.danger && this.mode === 'idle')) {
         o.setTransform(1, 0, 0, 1, 0, 0);
