@@ -51,6 +51,19 @@ test('声でこたえたときに漢字に変わっても、読み方の問題�
   ok('帰る', kaeru);
 });
 
+test('同じ答えを2回くりかえしても正解', () => {
+  const east = FIXED.find((q) => q.q.startsWith('たいようが のぼる'));
+  ok('東東', east);
+  ok('東 東', east);
+  ok('ひがし ひがし', east);
+  ok('ひがし、ひがし', east);
+  ok('ひがしひがし', east);
+  ng('西西', east);
+  ok('12 12', num12);
+  ok('じゅうに 12', num12);
+  ng('11 12', num12);
+});
+
 test('数の答え', () => {
   ok('12', num12);
   ok('１２', num12);

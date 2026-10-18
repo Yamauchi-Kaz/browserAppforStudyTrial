@@ -64,10 +64,28 @@
 
   // 答えの中の数を取り出す（いちばん最後の数を使う）
   function extractNumber(input) {
+    const nums = extractNumbers(input);
+    return nums.length ? nums[nums.length - 1] : null;
+  }
+
+  // 答えの中の数をぜんぶ取り出す（「12 12」→ [12, 12]）
+  function extractNumbers(input) {
     const s = String(input || '').normalize('NFKC').replace(/,/g, '');
     const m = s.match(/-?\d+(\.\d+)?/g);
-    if (m) return Number(m[m.length - 1]);
-    return parseKanjiNumber(s);
+    if (m) return m.map(Number);
+    const k = parseKanjiNumber(s);
+    return k === null ? [] : [k];
+  }
+
+  // 「ひがしひがし」「東東」のように、同じ答えをくりかえしたもの
+  function isRepeat(n, na) {
+    const k = Array.from(n).length / Array.from(na).length;
+    return Number.isInteger(k) && k >= 2 && na.repeat(k) === n;
+  }
+
+  // 「ひがし ひがし」「東、東」のように、空白や「、」で区切られた答え
+  function splitSegments(input) {
+    return String(input || '').normalize('NFKC').split(/[\s、。,.!?！？]+/).filter(Boolean);
   }
 
   function levenshtein(a, b) {
@@ -102,18 +120,27 @@
     if (hasNegation(input)) return { result: 'wrong' };
 
     if (question.type === 'number') {
-      const n = extractNumber(input);
-      if (n === null || Number.isNaN(n)) return { result: 'wrong' };
-      return { result: n === question.value ? 'correct' : 'wrong' };
+      // 「12 12」はOK。「11 12」のように ちがう数をまぜたら まちがい
+      const nums = extractNumbers(input);
+      if (nums.length === 0 || nums.some((x) => Number.isNaN(x))) return { result: 'wrong' };
+      return { result: nums.every((x) => x === question.value) ? 'correct' : 'wrong' };
     }
 
+    const segs = splitSegments(input);
+    if (segs.length > 1 && segs.every((sg) => judgeText(sg, question).result === 'correct')) {
+      return { result: 'correct' };
+    }
+    return judgeText(input, question);
+  }
+
+  function judgeText(input, question) {
     const n = normalize(input);
     if (!n) return { result: 'wrong' };
     let best = 0;
     for (const ans of question.answers.concat(question.voice || [])) {
       const na = normalize(ans);
       if (!na) continue;
-      if (n === na) return { result: 'correct' };
+      if (n === na || isRepeat(n, na)) return { result: 'correct' };
       // 「とうきょうと」「りんごだとおもう」のように、正解をふくむ短い答えはOK
       if (Array.from(na).length >= 2 && n.includes(na) && Array.from(n).length <= Array.from(na).length + 3) {
         return { result: 'correct' };

@@ -264,19 +264,25 @@
   }
 
   function startListening() {
-    if (!state.voiceMode || state.locked) return;
+    if (!state.voiceMode || state.locked || listener.active) return;
     el.heard.textContent = '🎤 きいてるよ… こたえを いってね';
     listener.start();
   }
 
   // 読み上げる文。ふりがなの読みを使い、計算の記号はことばにする
   function speechText(q) {
-    if (q.speak) return q.speak;
-    return parseRuby(q.q).map((p) => p.ruby || p.text).join('')
+    if (q.speak) return speakable(q.speak);
+    return speakable(parseRuby(q.q).map((p) => p.ruby || p.text).join('')
       .replace(/＋/g, ' たす ')
       .replace(/−/g, ' ひく ')
       .replace(/＝\s*？/g, ' は？')
-      .replace(/[「」（）]/g, '、');
+      .replace(/[「」（）]/g, '、'));
+  }
+
+  // ひらがなだけの文だと、音声合成が「やまは」の「は」を「ハ」と読んでしまうので「わ」に書きかえる。
+  // 問題文では、ことばのあと（空白・「、」・「？」の前）の「は」は助詞なので「わ」と読む
+  function speakable(text) {
+    return text.replace(/は(?=[\s、。？！?!]|$)/g, 'わ').replace(/\s+/g, ' ').trim();
   }
 
   // pauseTimer: 最初の読み上げのあいだは、時間をへらさない
@@ -284,22 +290,30 @@
     const s = state;
     const q = state.question;
     state.reading = pauseTimer;
-    if (listener) listener.stop(); // 読み上げの声を、こたえとして聞きとらないように
+    state.speaking = true;
     Sound.setDuck(true);
     el.read.classList.add('speaking');
+    // 読み上げのとちゅうでも こたえられるように、すぐに聞きとりを始める
+    startListening();
     Speaker.speak(speechText(q)).then(() => {
       if (state !== s) return;
       el.read.classList.remove('speaking');
+      state.speaking = false;
+      state.speechEndedAt = performance.now();
+      Sound.setDuck(state.voiceMode);
       if (state.question !== q || state.locked) return;
       state.reading = false;
-      Sound.setDuck(state.voiceMode);
-      startListening();
     });
+  }
+
+  // 読み上げちゅう（と 読みおわった すぐあと）は、マイクが読み上げの声を拾うことがある
+  function mayHearReading() {
+    return state.speaking || performance.now() - (state.speechEndedAt || 0) < 800;
   }
 
   function stopReading() {
     if (Speaker) Speaker.cancel();
-    if (state) state.reading = false;
+    if (state) { state.reading = false; state.speaking = false; }
     el.read.classList.remove('speaking');
   }
 
@@ -394,7 +408,7 @@
     state.mistakes.push({ q: state.question.q, a: answerText(state.question) });
     setFeedback(`じかんぎれ！ こたえは「${answerText(state.question)}」`, 'bad');
     stopReading();
-    if (state.readAloud) later(() => Speaker.speak(`こたえは、${answerText(state.question)}`), 700);
+    if (state.readAloud) later(() => Speaker.speak(speakable(`こたえは、${answerText(state.question)}`)), 700);
 
     Sound.play('enemyAttack');
     const s = state;
@@ -505,9 +519,15 @@
   function setupVoice() {
     listener = createListener({
       onInterim(text) {
+        if (state && mayHearReading()) return; // 読み上げの声かもしれないので出さない
         el.heard.textContent = `🎤 「${text}」…`;
       },
       onFinal(candidates) {
+        if (state && !state.locked && mayHearReading()) {
+          // 読み上げちゅうは、正解のときだけうけつける（まちがいは 読み上げの声を拾っただけかもしれない）
+          if (!candidates.some((c) => judge(c, state.question).result === 'correct')) return;
+          stopReading();
+        }
         const shown = (state && state.question && candidates.find((c) => judge(c, state.question).result === 'correct')) || candidates[0];
         el.heard.textContent = `🎤 「${shown}」ってきこえたよ`;
         el.input.value = shown;
