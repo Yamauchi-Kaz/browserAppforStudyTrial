@@ -16,7 +16,7 @@
   // RPG によく出てくるモンスターを参考にした、オリジナルのモンスター（絵は js/stage.js で描いている）
   const ENEMIES = [
     { key: 'kororun', name: 'コロルン', hp: 60, attack: 10 }, // 森のいたずらっ子（art/source/kororun-sheet.png の設定画から）
-    { key: 'bat', name: 'バットン', hp: 80, attack: 12 },
+    { key: 'jureking', name: 'ジュレキング', hp: 80, attack: 12 }, // ぷるぷるの王さま（art/source/jureking-sheet.png の設定画から）
     { key: 'mage', name: 'ダークまどうし', hp: 100, attack: 15 },
     { key: 'golem', name: 'ストーンゴーレム', hp: 130, attack: 18 },
     { key: 'dragon', name: 'マグマドラゴン', hp: 220, attack: 25, boss: true },

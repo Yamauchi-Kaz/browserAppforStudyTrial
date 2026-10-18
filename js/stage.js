@@ -214,7 +214,7 @@
 
     // ダークまどうし: フードの中で目が光る、まほうつかい
     mage: {
-      theme: 'castle',
+      theme: 'cave',
       height: 250,
       attackFx: 'magic',
       pose(t) {
@@ -430,6 +430,19 @@
     draw(ctx, t) { MONSTERS.slime.draw(ctx, t); }, // 絵の読みこみ前だけ使う
   };
 
+  // ジュレキング: ぷるぷるの王さま。重たそうに体をゆらし、のしかかって攻撃する
+  MONSTERS.jureking = {
+    theme: 'castle',
+    height: 215,
+    defeatStyle: 'fall',
+    attackFx: 'quake',
+    pose(t) {
+      const j = Math.sin(t * 3) * 0.035;
+      return { sx: 1 + j, sy: 1 - j };
+    },
+    draw(ctx, t) { MONSTERS.slime.draw(ctx, t); },
+  };
+
   // ---------- 背景 ----------
   const THEMES = {
     field: { sky: ['#8fd3ff', '#e8f8ff'], far: '#9ccc65', near: '#5aa95f', ground: '#7cb342', particle: 'leaf', pcolor: '#4caf50' },
@@ -535,6 +548,11 @@
       dir: 'monsters/kororun/',
       base: 'idle',
       poses: { idle: 0.43, happy: 0.52, angry: 0.48, attack: 0.75, hurt: 0.45, dizzy: 0.5, down: 0.55 },
+    },
+    jureking: {
+      dir: 'monsters/jureking/',
+      base: 'idle',
+      poses: { idle: 0.45, happy: 0.46, angry: 0.5, attack: 0.6, hurt: 0.5, dizzy: 0.5, down: 0.48 },
     },
   };
   for (const [key, r] of Object.entries(POSE_RIGS)) {
