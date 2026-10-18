@@ -1,0 +1,2 @@
+# browserAppforStudyTrial
+小学生向けの勉強アプリ。LLMを用いて正解判定して敵にダメージ与えるもの。
