@@ -348,7 +348,75 @@ def volcano():
     write('volcano', svg(defs, b))
 
 
+# ================= 天空の神殿（テンリュウガ） =================
+def sky():
+    rnd = random.Random(6)
+    defs = (lin('sky', [(0, '#16245e'), (0.45, '#4a6fd1'), (0.8, '#f2b98a'), (1, '#ffe2a8')])
+            + rad('sun', [(0, '#fffbe6'), (0.2, '#ffe9a8', 0.9), (1, '#ffd27a', 0)])
+            + lin('peak', [(0, '#7b8fd6'), (1, '#b9b3e0')])
+            + lin('stone', [(0, '#e9e2d0'), (1, '#a99f8a')])
+            + lin('cloudsea', [(0, '#fff6ea'), (1, '#c9c2e6')])
+            + lin('pillar', [(0, '#f1ead8'), (0.5, '#d2c7ad'), (1, '#9c917a')], 1, 0))
+    b = f'<rect width="{W}" height="{H}" fill="url(#sky)"/>\n'
+    # 星（上のほうだけ、のこっている夜明けの星）
+    for _ in range(40):
+        x = rnd.uniform(0, W); y = rnd.uniform(0, 260)
+        b += f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{rnd.uniform(1, 2.6):.1f}" fill="#ffffff" opacity="{rnd.uniform(0.4, 0.9):.2f}"/>'
+    b += '\n<circle cx="1050" cy="600" r="420" fill="url(#sun)"/>\n'
+    b += rays(1050, 600, 11, 1200, '#fff3c9', 0.1, 2.2, -1.57)
+    # 空にうかぶ山
+    for x, y, s in [(250, 360, 1.0), (620, 300, 0.7), (1380, 340, 0.9)]:
+        b += (f'<path d="M{x - 120 * s} {y + 60 * s} L{x - 50 * s} {y - 90 * s} L{x - 10 * s} {y - 40 * s} L{x + 30 * s} {y - 130 * s} L{x + 120 * s} {y + 60 * s} '
+              f'L{x + 40 * s} {y + 190 * s} L{x - 30 * s} {y + 150 * s} Z" fill="url(#peak)" stroke="#5a6aa8" stroke-width="4" stroke-linejoin="round"/>'
+              f'<path d="M{x + 30 * s} {y - 130 * s} L{x + 120 * s} {y + 60 * s} L{x + 40 * s} {y + 190 * s} L{x + 10 * s} {y} Z" fill="#5a6aa8" opacity="0.35"/>')
+        b += cloud(x, y + 66 * s, 0.9 * s, fill='#fff3ea', shade='#d9c8e6', line='#a99bc9')
+    # 遠くの雲
+    for cx, cy, s in [(120, 200, 0.9), (480, 140, 0.6), (900, 180, 0.8), (1250, 120, 0.7), (1480, 230, 0.6)]:
+        b += cloud(cx, cy, s, fill='#ffffff', shade='#e7d6f0', line='#b2a4d6')
+    # 雲の海
+    b += ridge(640, 26, 0.01, 41, 'url(#cloudsea)', 0.4, stroke='#b2a4d6')
+    for i in range(16):
+        x = i * 104 + rnd.uniform(-20, 20)
+        b += f'<circle cx="{x:.0f}" cy="{660 + rnd.uniform(-10, 20):.0f}" r="{rnd.uniform(50, 80):.0f}" fill="#fff8f0"/>'
+    b += '\n'
+    # 古い神殿の床（遠近つき）
+    vx = W / 2
+    b += (f'<path d="M{vx - 560} {GROUND} L{vx + 560} {GROUND} L{vx + 820} {H} L{vx - 820} {H} Z" fill="url(#stone)" stroke="#6e6452" stroke-width="7" stroke-linejoin="round"/>')
+    for k in range(1, 6):
+        y = GROUND + (H - GROUND) * (k / 6) ** 1.4
+        hw = 560 + 260 * (y - GROUND) / (H - GROUND)
+        b += f'<path d="M{vx - hw:.0f} {y:.0f} L{vx + hw:.0f} {y:.0f}" stroke="#8c816c" stroke-width="3"/>'
+    for c in range(-6, 7):
+        b += f'<path d="M{vx + c * 93:.0f} {GROUND} L{vx + c * 136:.0f} {H}" stroke="#8c816c" stroke-width="3"/>'
+    # 床の紋章（光る円）
+    b += (f'<ellipse cx="{vx}" cy="{GROUND + 150}" rx="300" ry="70" fill="none" stroke="#5fe3d0" stroke-width="6" opacity="0.7"/>'
+          f'<ellipse cx="{vx}" cy="{GROUND + 150}" rx="220" ry="50" fill="none" stroke="#f2c14e" stroke-width="4" opacity="0.8"/>\n')
+    # こわれた柱
+    def pillar(x, base, h, s, broken):
+        top = base - h
+        o = f'<g stroke="#5e5442" stroke-width="{6 * s:.1f}" stroke-linejoin="round">'
+        o += f'<rect x="{x - 56 * s}" y="{base - 26 * s}" width="{112 * s}" height="{26 * s}" fill="#cfc4aa"/>'
+        if broken:
+            o += f'<path d="M{x - 40 * s} {base - 26 * s} L{x - 40 * s} {top + 30 * s} L{x - 14 * s} {top} L{x + 6 * s} {top + 24 * s} L{x + 40 * s} {top + 10 * s} L{x + 40 * s} {base - 26 * s} Z" fill="url(#pillar)"/>'
+        else:
+            o += f'<rect x="{x - 40 * s}" y="{top}" width="{80 * s}" height="{h - 26 * s}" fill="url(#pillar)"/>'
+            o += f'<rect x="{x - 58 * s}" y="{top - 26 * s}" width="{116 * s}" height="{28 * s}" fill="#e3d9bf"/>'
+        o += '</g>'
+        for dx in (-20, 0, 20):
+            o += f'<path d="M{x + dx * s} {base - 30 * s} L{x + dx * s} {top + 36 * s}" stroke="#a99f8a" stroke-width="{4 * s:.1f}"/>'
+        o += f'<path d="M{x - 40 * s} {top + 60 * s} q30 20 20 60 t10 80" fill="none" stroke="#6fbf6a" stroke-width="{7 * s:.1f}" stroke-linecap="round"/>'
+        return o + '\n'
+    b += pillar(150, 900, 520, 1.1, False) + pillar(330, 800, 300, 0.85, True) + pillar(1206, 800, 340, 0.85, True) + pillar(1390, 900, 560, 1.1, False)
+    # 手前の雲
+    for cx, cy, s in [(40, 1000, 1.4), (1500, 990, 1.3)]:
+        b += cloud(cx, cy, s, fill='#ffffff', shade='#ddd0ee', line='#a99bc9')
+    # 鳥
+    for x, y in [(700, 250), (740, 270), (770, 240)]:
+        b += f'<path d="M{x - 14} {y} q7 -8 14 0 q7 -8 14 0" fill="none" stroke="#2a2f5e" stroke-width="3" stroke-linecap="round"/>'
+    write('sky', svg(defs, b))
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    field(); cave(); castle(); ruins(); volcano()
+    field(); cave(); castle(); ruins(); volcano(); sky()
     print('backgrounds ok')

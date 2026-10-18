@@ -19,7 +19,7 @@
     { key: 'jureking', name: 'ジュレキング', hp: 80, attack: 12 }, // ぷるぷるの王さま（art/source/jureking-sheet.png の設定画から）
     { key: 'mage', name: 'ダークまどうし', hp: 100, attack: 15 },
     { key: 'golem', name: 'ストーンゴーレム', hp: 130, attack: 18 },
-    { key: 'dragon', name: 'マグマドラゴン', hp: 220, attack: 25, boss: true },
+    { key: 'tenryuga', name: 'テンリュウガ', hp: 220, attack: 25, boss: true }, // 伝説の守護竜（art/source/tenryuga-sheet.png の設定画から）
   ];
 
 

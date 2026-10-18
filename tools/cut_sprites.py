@@ -30,6 +30,15 @@ SHEETS = {
         'dizzy': (765, 736, 1082, 1002, 'l'),
         'down': (1084, 740, 1446, 1002),
     },
+    'tenryuga': {
+        'idle': (587, 362, 802, 618, 'lr'),
+        'happy': (804, 356, 1062, 618, 'lr'),
+        'angry': (1052, 380, 1446, 618, 'l'),
+        'attack': (0, 678, 490, 1012, 'r'),
+        'hurt': (506, 712, 790, 1012, 'lr'),
+        'dizzy': (782, 748, 1068, 1012, 'lr'),
+        'down': (1078, 742, 1446, 1012, 'l'),
+    },
 }
 TOL = 34  # 紙の色との ちがいが これより小さければ背景とみなす
 
@@ -80,7 +89,7 @@ def cut(chara, name, box):
     biggest = max(comps, key=len) if comps else None
     for comp in comps:
         xs = [x for _, x in comp]
-        on_edge = ('l' in edges and min(xs) == 0) or ('r' in edges and max(xs) == w - 1)
+        on_edge = ('l' in edges and min(xs) <= 4) or ('r' in edges and max(xs) >= w - 5)
         if len(comp) < 60 or (on_edge and comp is not biggest):
             for y, x in comp:
                 keep[y, x] = False

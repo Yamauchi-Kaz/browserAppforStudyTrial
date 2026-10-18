@@ -443,8 +443,21 @@
     draw(ctx, t) { MONSTERS.slime.draw(ctx, t); },
   };
 
+  // テンリュウガ（ボス）: 空の果てから現れる伝説の守護竜。天雷ブレスでかみなりを落とす
+  MONSTERS.tenryuga = {
+    theme: 'sky',
+    height: 290,
+    defeatStyle: 'fall',
+    attackFx: 'thunder',
+    pose(t) {
+      return { y: Math.sin(t * 1.4) * 3, sy: 1 + Math.sin(t * 1.4) * 0.012 };
+    },
+    draw(ctx, t) { MONSTERS.dragon.draw(ctx, t); },
+  };
+
   // ---------- 背景 ----------
   const THEMES = {
+    sky: { sky: ['#16245e', '#ffe2a8'], far: '#7b8fd6', near: '#b9b3e0', ground: '#d2c7ad', particle: 'firefly', pcolor: '#fff3c9' },
     field: { sky: ['#8fd3ff', '#e8f8ff'], far: '#9ccc65', near: '#5aa95f', ground: '#7cb342', particle: 'leaf', pcolor: '#4caf50' },
     cave: { sky: ['#140f26', '#3a2d52'], far: '#2a2140', near: '#1d1630', ground: '#2d243f', particle: 'firefly', pcolor: '#b388ff' },
     castle: { sky: ['#232552', '#6a5acd'], far: '#3c3a6b', near: '#26244a', ground: '#38345e', particle: 'firefly', pcolor: '#fff59d', moon: '#fff6d5' },
@@ -540,7 +553,7 @@
     for (const e of EXPRESSIONS) loadSprite(`monsters/${key}-face-${e}.svg`);
     for (const p of rig.parts || []) loadSprite(`monsters/${p.img}.svg`);
   }
-  for (const name of ['field', 'cave', 'castle', 'ruins', 'volcano']) loadSprite(`bg/${name}.svg`, 1);
+  for (const name of ['field', 'cave', 'castle', 'ruins', 'volcano', 'sky']) loadSprite(`bg/${name}.svg`, 1);
 
   // 1枚絵のポーズを場面で切りかえるキャラクター。cx = 絵の中のキャラのまん中（横の位置、0〜1）
   const POSE_RIGS = {
@@ -553,6 +566,11 @@
       dir: 'monsters/jureking/',
       base: 'idle',
       poses: { idle: 0.45, happy: 0.46, angry: 0.5, attack: 0.6, hurt: 0.5, dizzy: 0.5, down: 0.48 },
+    },
+    tenryuga: {
+      dir: 'monsters/tenryuga/',
+      base: 'idle',
+      poses: { idle: 0.55, happy: 0.5, angry: 0.55, attack: 0.35, hurt: 0.55, dizzy: 0.5, down: 0.5 },
     },
   };
   for (const [key, r] of Object.entries(POSE_RIGS)) {
@@ -796,6 +814,7 @@
         this.emitter = { until: performance.now() + 600, colors, star: fx === 'magic', x: ex, y: ey };
       }
       if (fx === 'quake') this.burst(this.w / 2, this.groundY, 30, '#bcaaa4');
+      if (fx === 'thunder') setTimeout(() => { this.lightning = 1; }, 300); // かみなりで画面が光る
       return new Promise((resolve) => setTimeout(resolve, 330));
     }
 
