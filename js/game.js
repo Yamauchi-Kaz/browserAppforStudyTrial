@@ -4,6 +4,7 @@
 
   const { SUBJECTS, createQuestionDeck } = window.Questions;
   const { judge } = window.Judge;
+  const Sound = window.Sound;
 
   const LEVELS = {
     easy: { time: 30 },
@@ -11,30 +12,33 @@
     hard: { time: 12 },
   };
 
+  // RPG によく出てくるモンスターを参考にした、オリジナルのモンスター（絵は js/stage.js で描いている）
   const ENEMIES = [
-    { name: 'スライム', sprite: '🟢', hp: 60, attack: 10 },
-    { name: 'おばけ', sprite: '👻', hp: 80, attack: 12 },
-    { name: 'タコまじん', sprite: '🐙', hp: 100, attack: 15 },
-    { name: 'ロボット', sprite: '🤖', hp: 120, attack: 18 },
-    { name: 'ドラゴン', sprite: '🐉', hp: 200, attack: 25, boss: true },
+    { key: 'slime', name: 'ぷるぷるスライム', hp: 60, attack: 10 },
+    { key: 'bat', name: 'バットン', hp: 80, attack: 12 },
+    { key: 'mage', name: 'ダークまどうし', hp: 100, attack: 15 },
+    { key: 'golem', name: 'ストーンゴーレム', hp: 130, attack: 18 },
+    { key: 'dragon', name: 'マグマドラゴン', hp: 220, attack: 25, boss: true },
   ];
+
 
   const PLAYER_MAX_HP = 100;
   const BASE_DAMAGE = 10;
   const SPEED_BONUS = 30; // 時間がたくさん残っているほど、最大これだけ追加ダメージ
+  const HEAL_ON_DEFEAT = 15;
 
   const $ = (id) => document.getElementById(id);
   const el = {
     subjectList: $('subject-list'),
     start: $('btn-start'),
     retry: $('btn-retry'),
-    stage: $('stage-label'),
+    sound: $('btn-sound'),
+    stageLabel: $('stage-label'),
     score: $('score'),
     enemyName: $('enemy-name'),
-    enemySprite: $('enemy-sprite'),
     enemyHpFill: $('enemy-hp-fill'),
     enemyHpText: $('enemy-hp-text'),
-    damagePop: $('damage-pop'),
+    banner: $('banner'),
     subjectTag: $('subject-tag'),
     question: $('question-text'),
     timerFill: $('timer-fill'),
@@ -49,43 +53,29 @@
     playerHpText: $('player-hp-text'),
     combo: $('combo'),
     mark: $('mark'),
+    hurt: $('hurt-flash'),
   };
+
+  const battleStage = new window.Stage($('stage'));
+  const titleStage = new window.Stage($('title-stage'));
 
   let state = null;
   let timerId = null;
   let composing = false;
   let listener = null; // 音声認識（使えないブラウザーでは null）
 
-  // ---------- 効果音（Web Audio で作るので音声ファイル不要） ----------
-  let audioCtx = null;
-  function beep(freqs, duration = 0.12, type = 'square') {
-    try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      freqs.forEach((f, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = f;
-        const t = audioCtx.currentTime + i * duration;
-        gain.gain.setValueAtTime(0.08, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-        osc.connect(gain).connect(audioCtx.destination);
-        osc.start(t);
-        osc.stop(t + duration);
-      });
-    } catch (e) { /* 音が出せない環境では無視 */ }
+  // ゲームをやり直したあとに、前のゲームの予約が動かないようにする
+  function later(fn, ms) {
+    const s = state;
+    setTimeout(() => { if (state === s) fn(); }, ms);
   }
-  const sound = {
-    correct: () => beep([660, 880, 1320], 0.08),
-    wrong: () => beep([200], 0.2, 'sawtooth'),
-    damage: () => beep([300, 150], 0.15, 'sawtooth'),
-    win: () => beep([523, 659, 784, 1047], 0.15),
-  };
 
   // ---------- 画面 ----------
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
     $('screen-' + name).classList.add('active');
+    if (name === 'battle') { battleStage.start(); titleStage.stop(); } else battleStage.stop();
+    if (name === 'title') titleStage.start();
   }
 
   function replay(node, cls) {
@@ -110,8 +100,14 @@
     el.enemyHpText.textContent = `${e.hp} / ${e.maxHp}`;
     el.playerHpFill.style.width = (100 * state.hp) / PLAYER_MAX_HP + '%';
     el.playerHpText.textContent = `${state.hp} / ${PLAYER_MAX_HP}`;
+    el.playerHpFill.classList.toggle('low', state.hp <= 30);
     el.score.textContent = state.score;
-    el.combo.textContent = state.combo >= 2 ? `${state.combo} れんぞくせいかい！` : '';
+    if (state.combo >= 2) {
+      el.combo.textContent = `🔥 ${state.combo} コンボ！`;
+      replay(el.combo, 'pop');
+    } else {
+      el.combo.textContent = '';
+    }
   }
 
   function setFeedback(text, cls) {
@@ -125,19 +121,31 @@
     replay(el.mark, 'show');
   }
 
-  function popDamage(text) {
-    el.damagePop.textContent = text;
-    replay(el.damagePop, 'show');
+  function showBanner(text, boss) {
+    el.banner.textContent = text;
+    el.banner.className = 'banner' + (boss ? ' boss' : '');
+    replay(el.banner, 'show');
+  }
+
+  // ---------- タイトル画面のキャラクター紹介 ----------
+  let titleIndex = 0;
+  function cycleTitleMonster() {
+    titleStage.setMonster(ENEMIES[titleIndex % ENEMIES.length].key);
+    $('title-monster-name').textContent = ENEMIES[titleIndex % ENEMIES.length].name;
+    titleIndex++;
   }
 
   // ---------- ゲームの流れ ----------
   function startGame() {
+    Sound.unlock();
     const subjects = [...el.subjectList.querySelectorAll('input:checked')].map((i) => i.value);
     if (subjects.length === 0) {
+      Sound.play('wrong');
       el.start.textContent = 'きょうかを1つ以上えらんでね';
       setTimeout(() => { el.start.textContent = 'スタート！'; }, 1500);
       return;
     }
+    Sound.play('start');
     const level = document.querySelector('input[name="level"]:checked').value;
     const voiceMode = !!listener && el.modeVoice.checked;
     state = {
@@ -152,14 +160,19 @@
       enemy: null,
       question: null,
       startedAt: 0,
-      locked: false,
+      lastTickSecond: null,
+      locked: true,
       correct: 0,
       timeouts: 0,
       defeated: 0,
       mistakes: [],
     };
+    Sound.setDuck(voiceMode);
     showScreen('battle');
     el.heard.textContent = '';
+    el.question.textContent = '';
+    el.subjectTag.textContent = '';
+    el.timerFill.style.width = '100%';
     if (voiceMode) {
       // スタートボタンを押したタイミングでマイクの許可をもらっておく
       requestMicPermission().then((ok) => {
@@ -185,27 +198,36 @@
   function disableVoiceMode(message) {
     if (state) state.voiceMode = false;
     if (listener) listener.stop();
+    Sound.setDuck(false);
     el.heard.textContent = message;
   }
 
   function spawnEnemy() {
     const base = ENEMIES[state.enemyIndex];
     state.enemy = { ...base, maxHp: base.hp };
-    el.stage.textContent = base.boss ? 'ボスせん！' : `ステージ ${state.enemyIndex + 1}`;
+    state.locked = true;
+    el.stageLabel.textContent = base.boss ? '⚠️ ボスせん！' : `ステージ ${state.enemyIndex + 1} / ${ENEMIES.length}`;
     el.enemyName.textContent = base.name;
-    el.enemySprite.textContent = base.sprite;
-    el.enemySprite.className = 'enemy';
-    setFeedback(`${base.name} があらわれた！`);
+    el.question.textContent = '';
+    el.subjectTag.textContent = '';
+    setFeedback('');
+    battleStage.setMonster(base.key);
+    showBanner(`${base.name} があらわれた！`, base.boss);
+    Sound.play(base.boss ? 'bossAppear' : 'appear');
+    Sound.bgm(base.boss ? 'boss' : 'battle');
     renderHp();
-    setTimeout(nextQuestion, 900);
+    later(nextQuestion, base.boss ? 2000 : 1500);
   }
 
   function nextQuestion() {
     state.question = state.nextQuestion();
     state.locked = false;
+    state.lastTickSecond = null;
+    battleStage.setDanger(false);
     const subj = SUBJECTS[state.question.subject];
     el.subjectTag.textContent = `${subj.icon} ${subj.name}`;
     el.question.textContent = state.question.q;
+    replay(el.question, 'appear');
     el.input.value = '';
     el.input.disabled = false;
     if (!state.voiceMode) el.input.focus();
@@ -229,6 +251,13 @@
     const r = remainingRatio();
     el.timerFill.style.width = r * 100 + '%';
     el.timerFill.className = 'timer-fill' + (r < 0.25 ? ' danger' : r < 0.5 ? ' warn' : '');
+    battleStage.setDanger(r < 0.3);
+    // のこり5びょうから カチカチ鳴らす
+    const sec = Math.ceil(r * state.timeLimit);
+    if (sec <= 5 && sec > 0 && sec !== state.lastTickSecond) {
+      state.lastTickSecond = sec;
+      Sound.play('tick');
+    }
     if (r <= 0) onTimeout();
   }
 
@@ -252,7 +281,9 @@
     if (result === 'correct') {
       onCorrect();
     } else {
-      sound.wrong();
+      Sound.play(result === 'close' ? 'close' : 'wrong');
+      later(() => Sound.play('laugh'), 350);
+      battleStage.taunt();
       showMark(false);
       state.combo = 0;
       renderHp();
@@ -265,25 +296,28 @@
     state.locked = true;
     if (listener) listener.stop();
     clearInterval(timerId);
+    battleStage.setDanger(false);
     const ratio = remainingRatio();
     state.combo += 1;
     const comboBonus = Math.min(state.combo - 1, 5) * 2;
     const damage = Math.round(BASE_DAMAGE + SPEED_BONUS * ratio) + comboBonus;
-    const fast = ratio >= 0.7;
+    const critical = ratio >= 0.7;
 
     state.correct += 1;
     state.score += damage * 10;
-    state.enemy.hp = Math.max(0, state.enemy.hp - damage);
 
-    sound.correct();
     showMark(true);
-    replay(el.enemySprite, 'hit');
-    popDamage((fast ? 'はやい！ ' : '') + damage + ' ダメージ！');
-    setFeedback(fast ? 'すごい！はやい！' : 'せいかい！', 'good');
-    renderHp();
-
-    if (state.enemy.hp <= 0) setTimeout(onEnemyDefeated, 700);
-    else setTimeout(nextQuestion, 1000);
+    setFeedback(critical ? 'すごい！はやい！' : 'せいかい！', 'good');
+    Sound.play('shoot');
+    const s = state;
+    battleStage.playerAttack({ damage, critical, count: Math.min(1 + Math.floor(state.combo / 2), 3) }).then(() => {
+      if (state !== s) return;
+      Sound.play(critical ? 'critical' : 'hit');
+      state.enemy.hp = Math.max(0, state.enemy.hp - damage);
+      renderHp();
+      if (state.enemy.hp <= 0) later(onEnemyDefeated, 400);
+      else later(nextQuestion, 900);
+    });
   }
 
   function onTimeout() {
@@ -294,38 +328,49 @@
     el.input.disabled = true;
     state.timeouts += 1;
     state.combo = 0;
-    state.hp = Math.max(0, state.hp - state.enemy.attack);
     state.mistakes.push({ q: state.question.q, a: answerText(state.question) });
+    setFeedback(`じかんぎれ！ こたえは「${answerText(state.question)}」`, 'bad');
 
-    sound.damage();
-    replay(el.enemySprite, 'attack');
-    replay(document.body, 'shake');
-    setFeedback(`じかんぎれ！ ${state.enemy.attack} ダメージをうけた… こたえは「${answerText(state.question)}」`, 'bad');
-    renderHp();
-
-    if (state.hp <= 0) setTimeout(() => endGame(false), 1800);
-    else setTimeout(nextQuestion, 2200);
+    Sound.play('enemyAttack');
+    const s = state;
+    battleStage.enemyAttack().then(() => {
+      if (state !== s) return;
+      battleStage.setDanger(false);
+      state.hp = Math.max(0, state.hp - state.enemy.attack);
+      replay(document.body, 'shake');
+      replay(el.hurt, 'show');
+      setFeedback(`${state.enemy.attack} ダメージをうけた！ こたえは「${answerText(state.question)}」`, 'bad');
+      renderHp();
+      if (state.hp <= 0) later(() => endGame(false), 1500);
+      else later(nextQuestion, 2200);
+    });
   }
 
   function onEnemyDefeated() {
     state.defeated += 1;
-    sound.win();
-    el.enemySprite.classList.add('defeated');
-    setFeedback(`${state.enemy.name} をたおした！`, 'good');
-    state.enemyIndex += 1;
-    if (state.enemyIndex >= ENEMIES.length) {
-      setTimeout(() => endGame(true), 1200);
-    } else {
-      // ちょっとだけ回復
-      state.hp = Math.min(PLAYER_MAX_HP, state.hp + 10);
-      setTimeout(spawnEnemy, 1300);
-    }
+    Sound.play('defeat');
+    showBanner(`${state.enemy.name} をたおした！`);
+    setFeedback('');
+    battleStage.defeat().then(() => {
+      if (state.enemyIndex + 1 >= ENEMIES.length) {
+        later(() => endGame(true), 600);
+        return;
+      }
+      state.enemyIndex += 1;
+      state.hp = Math.min(PLAYER_MAX_HP, state.hp + HEAL_ON_DEFEAT);
+      Sound.play('heal');
+      setFeedback(`HP が ${HEAL_ON_DEFEAT} かいふくした！`, 'good');
+      renderHp();
+      later(spawnEnemy, 1300);
+    });
   }
 
   function endGame(win) {
     clearInterval(timerId);
     if (listener) listener.stop();
     state.locked = true;
+    Sound.setDuck(false);
+    Sound.bgm(win ? 'victory' : 'gameover');
     $('result-title').textContent = win ? '🎉 ゲームクリア！ 🎉' : '😢 ゲームオーバー';
     $('result-score').textContent = state.score;
     $('result-correct').textContent = state.correct;
@@ -430,11 +475,34 @@
     });
   }
 
+  // ---------- 音のボタン ----------
+  function renderSoundButton() {
+    el.sound.textContent = Sound.muted ? '🔇' : '🔊';
+    el.sound.setAttribute('aria-label', Sound.muted ? '音を出す' : '音を消す');
+  }
+
   // ---------- 初期化 ----------
   renderSubjects();
   setupVoice();
+  renderSoundButton();
+  cycleTitleMonster();
+  setInterval(() => { if ($('screen-title').classList.contains('active')) cycleTitleMonster(); }, 3500);
+  showScreen('title');
+  // スマホは画面をさわるまで音が出せないので、さいしょのタッチでタイトルBGMを流す
+  document.addEventListener('pointerdown', () => {
+    Sound.unlock();
+    if ($('screen-title').classList.contains('active')) Sound.bgm('title');
+  }, { once: true });
+  el.sound.addEventListener('click', () => {
+    Sound.toggleMute();
+    renderSoundButton();
+  });
   el.start.addEventListener('click', startGame);
-  el.retry.addEventListener('click', () => showScreen('title'));
+  el.retry.addEventListener('click', () => {
+    Sound.play('click');
+    Sound.bgm('title');
+    showScreen('title');
+  });
   el.form.addEventListener('submit', onSubmit);
   // 日本語入力（IME）の変換を確定するための Enter では送信しない
   el.input.addEventListener('compositionstart', () => { composing = true; });

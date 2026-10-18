@@ -19,7 +19,7 @@ body {
   background: radial-gradient(circle at 50% 0%, var(--bg2), var(--bg) 70%);
   background-color: var(--bg);
   color: var(--text);
-  font-family: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", system-ui, sans-serif;
+  font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", system-ui, sans-serif;
 }
 
 #app {
@@ -31,7 +31,7 @@ body {
 .screen { display: none; }
 .screen.active { display: block; }
 
-h1 { text-align: center; font-size: clamp(28px, 7vw, 44px); margin: 16px 0 8px; }
+h1 { text-align: center; font-size: clamp(28px, 7vw, 44px); font-weight: 900; margin: 16px 0 8px; text-shadow: 0 4px 0 #000a; }
 h2 { font-size: 18px; margin: 0 0 10px; color: var(--accent); }
 .lead { text-align: center; color: var(--muted); line-height: 1.7; }
 
@@ -70,14 +70,44 @@ h2 { font-size: 18px; margin: 0 0 10px; color: var(--accent); }
 .btn.mic.listening { background: var(--bad); animation: pulse 1s infinite; }
 
 /* バトル */
-.status-row { display: flex; justify-content: space-between; color: var(--muted); }
+.status-row { display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding-right: 54px; color: var(--muted); font-weight: 800; }
 
-.enemy-area { position: relative; text-align: center; padding: 8px 0; }
-.enemy-name { font-size: 20px; font-weight: bold; }
-.enemy { font-size: clamp(90px, 25vw, 140px); line-height: 1.2; transition: transform 0.1s; }
-.enemy.hit { animation: hit 0.4s; }
-.enemy.attack { animation: attack 0.5s; }
-.enemy.defeated { animation: defeated 0.8s forwards; }
+.enemy-area { position: relative; margin: 8px 0 12px; border-radius: 16px; overflow: hidden; border: 3px solid #0006; }
+.enemy-head {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 2;
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  background: linear-gradient(#000a, #0000);
+}
+.enemy-name { font-weight: 900; font-size: 18px; white-space: nowrap; text-shadow: 0 2px 0 #000; }
+.stage-canvas { display: block; width: 100%; height: clamp(240px, 42vh, 340px); }
+.title-show { position: relative; margin: 12px 0; border-radius: 16px; overflow: hidden; border: 3px solid #0006; }
+.title-canvas { display: block; width: 100%; height: 200px; }
+.title-monster {
+  position: absolute; left: 0; right: 0; bottom: 8px; text-align: center;
+  font-weight: 900; font-size: 18px; text-shadow: 0 2px 0 #000, 0 0 8px #000;
+}
+
+.banner {
+  position: absolute; left: 0; right: 0; top: 42%; z-index: 3;
+  text-align: center; font-size: clamp(18px, 5.6vw, 34px); font-weight: 900; white-space: nowrap;
+  color: #fff; text-shadow: 0 3px 0 #000, 0 0 12px #000;
+  padding: 8px 0; background: #0008;
+  opacity: 0; pointer-events: none;
+}
+.banner.boss { color: #ff5252; }
+.banner.show { animation: banner 1.6s forwards; }
+
+.sound-btn {
+  position: fixed; z-index: 20;
+  top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px));
+  width: 44px; height: 44px; border-radius: 50%; border: 2px solid #fff6;
+  background: #0007; color: #fff; font-size: 20px; cursor: pointer;
+}
+.hurt-flash { position: fixed; inset: 0; z-index: 15; pointer-events: none; background: radial-gradient(circle, #ff000000 30%, #ff0000aa); opacity: 0; }
+.hurt-flash.show { animation: hurt 0.6s; }
+.hpfill.low { animation: pulse 0.8s infinite; }
+.question.appear { animation: qin 0.35s; }
+#combo.pop { display: inline-block; animation: combo 0.4s; }
 
 .hpbar {
   position: relative;
@@ -87,26 +117,12 @@ h2 { font-size: 18px; margin: 0 0 10px; color: var(--accent); }
   overflow: hidden;
   margin: 6px auto;
 }
-.hpbar.enemy { max-width: 320px; }
+.hpbar.enemy { flex: 1; margin: 0; }
 .hpfill { height: 100%; width: 100%; transition: width 0.4s; }
 .hpbar.enemy .hpfill { background: var(--enemy-hp); }
 .hpbar.player .hpfill { background: var(--player-hp); }
 .hpbar span { position: absolute; inset: 0; font-size: 13px; line-height: 20px; text-align: center; }
 
-.damage-pop {
-  position: absolute;
-  left: 50%;
-  top: 40%;
-  transform: translateX(-50%);
-  font-size: clamp(24px, 7vw, 40px);
-  font-weight: bold;
-  color: var(--accent);
-  text-shadow: 0 2px 0 #000;
-  opacity: 0;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.damage-pop.show { animation: pop 0.9s forwards; }
 
 .question-box { background: var(--panel); border-radius: 16px; padding: 14px 16px; }
 .subject-tag { font-size: 14px; color: var(--accent); }
@@ -164,10 +180,14 @@ body.shake #app { animation: shake 0.4s; }
 .result p { font-size: 20px; margin: 8px 0; }
 #review-list { padding-left: 20px; line-height: 1.8; }
 
-@keyframes hit { 0%, 100% { transform: translateX(0); filter: none; } 25% { transform: translateX(-12px); filter: brightness(2); } 75% { transform: translateX(12px); } }
-@keyframes attack { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4) translateY(30px); } }
-@keyframes defeated { to { transform: scale(0.2) rotate(360deg); opacity: 0; } }
-@keyframes pop { 0% { opacity: 0; top: 45%; } 20% { opacity: 1; } 100% { opacity: 0; top: 5%; } }
 @keyframes mark { 0% { opacity: 0; transform: scale(0.5); } 30% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; } }
 @keyframes shake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-8px, 4px); } 40% { transform: translate(8px, -4px); } 60% { transform: translate(-6px, 2px); } 80% { transform: translate(6px, -2px); } }
 @keyframes pulse { 50% { opacity: 0.6; } }
+@keyframes banner { 0% { opacity: 0; transform: scaleY(0); } 12% { opacity: 1; transform: scaleY(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hurt { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes qin { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes combo { 0% { transform: scale(0.5); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

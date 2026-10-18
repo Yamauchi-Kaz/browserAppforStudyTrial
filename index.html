@@ -4,14 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>こたえてバトル</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800;900&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <button id="btn-sound" class="sound-btn" type="button" aria-label="音を消す">🔊</button>
+  <div class="hurt-flash" id="hurt-flash"></div>
   <main id="app">
     <!-- タイトル画面 -->
     <section id="screen-title" class="screen active">
       <h1>⚔️ こたえてバトル ⚔️</h1>
       <p class="lead">問題に日本語でこたえて、モンスターをたおそう！<br>はやくこたえるほど、大ダメージ！</p>
+      <div class="title-show">
+        <canvas id="title-stage" class="title-canvas"></canvas>
+        <div class="title-monster" id="title-monster-name"></div>
+      </div>
 
       <div class="panel">
         <h2>きょうか をえらぼう</h2>
@@ -47,10 +56,12 @@
       </div>
 
       <div class="enemy-area">
-        <div class="enemy-name" id="enemy-name">スライム</div>
-        <div class="hpbar enemy"><div class="hpfill" id="enemy-hp-fill"></div><span id="enemy-hp-text"></span></div>
-        <div class="enemy" id="enemy-sprite">🟢</div>
-        <div class="damage-pop" id="damage-pop"></div>
+        <div class="enemy-head">
+          <span class="enemy-name" id="enemy-name"></span>
+          <div class="hpbar enemy"><div class="hpfill" id="enemy-hp-fill"></div><span id="enemy-hp-text"></span></div>
+        </div>
+        <canvas id="stage" class="stage-canvas"></canvas>
+        <div class="banner" id="banner"></div>
       </div>
 
       <div class="question-box">
@@ -93,6 +104,8 @@
   </main>
 
   <script src="js/judge.js"></script>
+  <script src="js/stage.js"></script>
+  <script src="js/audio.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/game.js"></script>
 </body>
