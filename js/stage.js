@@ -455,8 +455,21 @@
     draw(ctx, t) { MONSTERS.dragon.draw(ctx, t); },
   };
 
+  // 怪鳥ブリザード: 氷雪の峰にすむ賢い魔鳥。空にうかび、氷嵐ブレスで戦場をこおらせる
+  MONSTERS.blizzard = {
+    theme: 'snow',
+    height: 210,
+    defeatStyle: 'fall',
+    attackFx: 'freeze',
+    pose(t) {
+      return { y: -34 + Math.sin(t * 2) * 10, rot: Math.sin(t * 1.3) * 0.03, shadow: 0.55 };
+    },
+    draw(ctx, t) { MONSTERS.mage.draw(ctx, t); },
+  };
+
   // ---------- 背景 ----------
   const THEMES = {
+    snow: { sky: ['#5d7fb8', '#e8f1fb'], far: '#9fb6d8', near: '#c9d9ef', ground: '#ffffff', particle: 'snow', pcolor: '#ffffff' },
     sky: { sky: ['#16245e', '#ffe2a8'], far: '#7b8fd6', near: '#b9b3e0', ground: '#d2c7ad', particle: 'firefly', pcolor: '#fff3c9' },
     field: { sky: ['#8fd3ff', '#e8f8ff'], far: '#9ccc65', near: '#5aa95f', ground: '#7cb342', particle: 'leaf', pcolor: '#4caf50' },
     cave: { sky: ['#140f26', '#3a2d52'], far: '#2a2140', near: '#1d1630', ground: '#2d243f', particle: 'firefly', pcolor: '#b388ff' },
@@ -553,7 +566,7 @@
     for (const e of EXPRESSIONS) loadSprite(`monsters/${key}-face-${e}.svg`);
     for (const p of rig.parts || []) loadSprite(`monsters/${p.img}.svg`);
   }
-  for (const name of ['field', 'cave', 'castle', 'ruins', 'volcano', 'sky']) loadSprite(`bg/${name}.svg`, 1);
+  for (const name of ['field', 'cave', 'castle', 'ruins', 'volcano', 'sky', 'snow']) loadSprite(`bg/${name}.svg`, 1);
 
   // 1枚絵のポーズを場面で切りかえるキャラクター。cx = 絵の中のキャラのまん中（横の位置、0〜1）
   const POSE_RIGS = {
@@ -571,6 +584,11 @@
       dir: 'monsters/tenryuga/',
       base: 'idle',
       poses: { idle: 0.55, happy: 0.5, angry: 0.55, attack: 0.35, hurt: 0.55, dizzy: 0.5, down: 0.5 },
+    },
+    blizzard: {
+      dir: 'monsters/blizzard/',
+      base: 'idle',
+      poses: { idle: 0.46, happy: 0.45, angry: 0.55, attack: 0.38, hurt: 0.42, dizzy: 0.45, down: 0.6 },
     },
   };
   for (const [key, r] of Object.entries(POSE_RIGS)) {
@@ -815,6 +833,11 @@
       }
       if (fx === 'quake') this.burst(this.w / 2, this.groundY, 30, '#bcaaa4');
       if (fx === 'thunder') setTimeout(() => { this.lightning = 1; }, 300); // かみなりで画面が光る
+      if (fx === 'freeze') {
+        // 氷嵐: 画面が白く光り、こおりのつぶが ふきつける
+        setTimeout(() => { this.lightning = 0.6; }, 300);
+        this.emitter = { until: performance.now() + 500, colors: ['#ffffff', '#d6f3ff', '#8fdcf2'], star: true, x: c.x, y: c.y };
+      }
       return new Promise((resolve) => setTimeout(resolve, 330));
     }
 
@@ -936,7 +959,7 @@
       }
       for (const a of this.ambient) {
         if (!this.reduceMotion) {
-          if (th.particle === 'leaf') { a.y += dt * 30 * a.s; a.x += Math.sin(t + a.p) * dt * 30; }
+          if (th.particle === 'leaf' || th.particle === 'snow') { a.y += dt * 30 * a.s; a.x += Math.sin(t + a.p) * dt * 30; }
           else if (th.particle === 'firefly') { a.x += Math.sin(t * 0.7 + a.p) * dt * 15; a.y += Math.cos(t * 0.9 + a.p) * dt * 10; }
           else { a.y -= dt * 25 * a.s; a.x += Math.sin(t + a.p) * dt * 10; }
           if (a.y > h + 10) a.y = -10;
@@ -948,6 +971,8 @@
           ellipse(ctx, a.x, a.y, 3, 3, th.pcolor);
         } else if (th.particle === 'bubble') {
           ellipse(ctx, a.x, a.y, 4 * a.s, 4 * a.s, null, 'rgba(255,255,255,0.7)', 2);
+        } else if (th.particle === 'snow') {
+          ellipse(ctx, a.x, a.y, 2.5 * a.s, 2.5 * a.s, th.pcolor);
         } else if (th.particle === 'leaf') {
           ellipse(ctx, a.x, a.y, 7, 3, th.pcolor, null, 0, t * 2 + a.p);
         } else {
@@ -996,8 +1021,8 @@
       } else if (this.mode === 'defeat') {
         const q = Math.min(p / 0.9, 1);
         if (m.defeatStyle === 'fall') {
-          // たおれた絵のまま、少しはねてから消える
-          oy -= Math.sin(Math.min(q / 0.35, 1) * Math.PI) * 16 * k;
+          // たおれた絵のまま、少しはねてから消える（空をとぶモンスターも地面におちる）
+          oy = -Math.sin(Math.min(q / 0.35, 1) * Math.PI) * 16 * k;
           alpha = q < 0.55 ? 1 : 1 - (q - 0.55) / 0.45;
         } else {
           rot += q * Math.PI * 3;

@@ -416,7 +416,70 @@ def sky():
     write('sky', svg(defs, b))
 
 
+# ================= 氷雪の峰（怪鳥ブリザード） =================
+def snow():
+    rnd = random.Random(7)
+    defs = (lin('sky', [(0, '#5d7fb8'), (0.5, '#a9c4e6'), (1, '#e8f1fb')])
+            + lin('peak', [(0, '#ffffff'), (1, '#c9d9ef')], 1, 1)
+            + lin('peak2', [(0, '#dfe9f7'), (1, '#9fb6d8')], 1, 1)
+            + lin('snowg', [(0, '#ffffff'), (1, '#cfdcef')])
+            + lin('ice', [(0, '#e8fbff'), (0.5, '#8fdcf2'), (1, '#3f9fd6')], 1, 1)
+            + rad('moon', [(0, '#ffffff'), (0.3, '#eaf4ff', 0.8), (1, '#eaf4ff', 0)]))
+    b = f'<rect width="{W}" height="{H}" fill="url(#sky)"/>\n'
+    b += '<circle cx="1180" cy="170" r="220" fill="url(#moon)"/><circle cx="1180" cy="170" r="56" fill="#fbfdff"/>\n'
+    # 遠くの氷の山なみ
+    def peaks(base, n, hmin, hmax, fill, shade, line, seed):
+        r = random.Random(seed)
+        o = ''
+        x = -100
+        while x < W + 100:
+            w = r.uniform(180, 320); h = r.uniform(hmin, hmax)
+            top = (x + w / 2 + r.uniform(-30, 30), base - h)
+            # 稜線をギザギザにする（となりの小さな峰とけずれた岩）
+            lpts = [(x, base), (x + w * 0.18, base - h * r.uniform(0.35, 0.5)), (x + w * 0.3, base - h * r.uniform(0.3, 0.42)), top]
+            rpts = [(top[0] + w * 0.12, base - h * r.uniform(0.7, 0.8)), (top[0] + w * 0.2, base - h * r.uniform(0.6, 0.7)), (x + w * 0.85, base - h * r.uniform(0.25, 0.4)), (x + w, base)]
+            d = 'M' + ' L'.join(f'{px:.0f} {py:.0f}' for px, py in lpts + rpts) + ' Z'
+            o += f'<path d="{d}" fill="{fill}" stroke="{line}" stroke-width="4" stroke-linejoin="round"/>'
+            # 岩はだのすじ
+            o += f'<path d="M{top[0]:.0f} {top[1]:.0f} L{top[0] - w * 0.08:.0f} {base - h * 0.55:.0f} L{top[0] - w * 0.02:.0f} {base - h * 0.3:.0f}" fill="none" stroke="{line}" stroke-width="3" opacity="0.5"/>'
+            o += f'<path d="M{top[0]:.0f} {top[1]:.0f} L{x + w:.0f} {base} L{top[0] + w * 0.12:.0f} {base} Z" fill="{shade}" opacity="0.55"/>'
+            o += f'<path d="M{top[0] - 8:.0f} {top[1] + 40:.0f} L{top[0]:.0f} {top[1] + 14:.0f} L{top[0] + 10:.0f} {top[1] + 50:.0f}" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>'
+            x += w * 0.7
+        return o + '\n'
+    b += peaks(560, 0, 220, 360, 'url(#peak2)', '#7f9cc8', '#6d88b5', 71)
+    b += peaks(680, 0, 160, 260, 'url(#peak)', '#a9bfe0', '#7f9cc8', 72)
+    # 雪をかぶった木
+    for i in range(16):
+        x = 30 + i * 100 + rnd.uniform(-20, 20)
+        if 470 < x < 1060:
+            continue
+        y = 720 + rnd.uniform(-10, 14); s = rnd.uniform(0.7, 1.0)
+        b += (f'<g stroke="#2c4a5e" stroke-width="{4 * s:.1f}" stroke-linejoin="round">'
+              f'<rect x="{x - 6 * s:.0f}" y="{y - 24 * s:.0f}" width="{12 * s:.0f}" height="{24 * s:.0f}" fill="#6b4a32"/>'
+              f'<path d="M{x - 50 * s:.0f} {y - 20 * s:.0f} L{x:.0f} {y - 150 * s:.0f} L{x + 50 * s:.0f} {y - 20 * s:.0f} Z" fill="#3f7a6a"/>'
+              f'</g><path d="M{x - 24 * s:.0f} {y - 90 * s:.0f} L{x:.0f} {y - 150 * s:.0f} L{x + 24 * s:.0f} {y - 90 * s:.0f} Q{x:.0f} {y - 100 * s:.0f} {x - 24 * s:.0f} {y - 90 * s:.0f} Z" fill="#ffffff"/>'
+              f'<path d="M{x - 44 * s:.0f} {y - 34 * s:.0f} Q{x:.0f} {y - 52 * s:.0f} {x + 44 * s:.0f} {y - 34 * s:.0f}" fill="none" stroke="#ffffff" stroke-width="{8 * s:.1f}" stroke-linecap="round"/>\n')
+    # 雪の地面
+    b += f'<rect x="0" y="{GROUND - 20}" width="{W}" height="{H - GROUND + 20}" fill="url(#snowg)"/>\n'
+    b += f'<path d="M-20 {GROUND - 20} Q300 {GROUND - 50} 700 {GROUND - 24} T{W + 20} {GROUND - 30}" fill="none" stroke="#9fb6d8" stroke-width="5"/>\n'
+    for _ in range(26):
+        x = rnd.uniform(0, W); y = rnd.uniform(GROUND, H)
+        if 420 < x < 1110 and y < 980:
+            continue
+        b += f'<path d="M{x:.0f} {y:.0f} q40 -12 80 0" fill="none" stroke="#a9bfe0" stroke-width="4" stroke-linecap="round" opacity="0.7"/>'
+    # 氷の結晶のかたまり
+    def crystal(x, y, s):
+        o = ''
+        for dx, h, w, a in [(-30, 100, 20, -0.35), (0, 150, 26, 0), (32, 110, 20, 0.3), (58, 64, 14, 0.55)]:
+            o += (f'<g transform="translate({x + dx * s:.0f} {y}) rotate({math.degrees(a):.0f})">'
+                  f'<path d="M{-w * s:.0f} 0 L{-w * s:.0f} {-h * s * 0.75:.0f} L0 {-h * s:.0f} L{w * s:.0f} {-h * s * 0.75:.0f} L{w * s:.0f} 0 Z" fill="url(#ice)" stroke="#2c5a7a" stroke-width="5" stroke-linejoin="round"/>'
+                  f'<path d="M0 {-h * s:.0f} L0 0" stroke="#ffffff" stroke-width="3" opacity="0.7"/></g>')
+        return o + '\n'
+    b += crystal(160, 960, 1.1) + crystal(1390, 930, 1.0) + crystal(330, 840, 0.55)
+    write('snow', svg(defs, b))
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    field(); cave(); castle(); ruins(); volcano(); sky()
+    field(); cave(); castle(); ruins(); volcano(); sky(); snow()
     print('backgrounds ok')

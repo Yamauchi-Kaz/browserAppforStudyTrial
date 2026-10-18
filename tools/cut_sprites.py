@@ -6,7 +6,7 @@ import os
 from collections import deque
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 # キャラクターごとの設定画と、ポーズ名: (左, 上, 右, 下[, 'l' や 'r']) = 元の絵の中でそのポーズがある範囲。
@@ -39,21 +39,49 @@ SHEETS = {
         'dizzy': (782, 748, 1068, 1012, 'lr'),
         'down': (1078, 742, 1446, 1012, 'l'),
     },
+    'blizzard': {
+        'idle': (540, 440, 818, 668, 'lr'),
+        'happy': (818, 436, 1126, 660, 'lr'),
+        'angry': (1124, 446, 1446, 668, 'l'),
+        'attack': (4, 646, 578, 1020, 'r'),
+        'hurt': (572, 756, 832, 1020, 'lr'),
+        'dizzy': (830, 766, 1104, 1020, 'lr'),
+        'down': (1100, 776, 1446, 1012, 'l'),
+    },
 }
 TOL = 34  # 紙の色との ちがいが これより小さければ背景とみなす
+# 設定画ごとの追加ルール。warm: 紙はクリーム色（赤より青が少ない）なので、
+# 「赤 − 青」がこの値以上のときだけ背景とみなす（白い羽など、白っぽいキャラを消さないため）
+OPTIONS = {
+    # halo: 背景のとなりにある「白っぽくて色のうすい」点を、何回まで背景にふくめるか（絵のまわりの白いもやを消す）
+    # erase: ポーズ名 → 元の絵の座標での多角形。となりの絵が重なっているところを、先に紙の色でぬりつぶす
+    'blizzard': {'warm': 12, 'halo': 7, 'erase': {
+        'attack': [[(160, 600), (600, 600), (600, 742), (440, 736), (300, 772), (250, 752), (175, 745), (160, 700)]],
+    }},
+}
 
 
 def cut(chara, name, box):
     edges = box[4] if len(box) > 4 else ''
     box = box[:4]
     src = os.path.join(ROOT, 'art', 'source', f'{chara}-sheet.png')
-    im = Image.open(src).convert('RGB').crop(box)
+    sheet = Image.open(src).convert('RGB')
+    polys = OPTIONS.get(chara, {}).get('erase', {}).get(name, [])
+    if polys:
+        paper_c = sheet.getpixel((box[0] + 2, box[3] - 2))
+        d = ImageDraw.Draw(sheet)
+        for poly in polys:
+            d.polygon(poly, fill=paper_c)
+    im = sheet.crop(box)
     a = np.asarray(im).astype(np.int32)
     h, w, _ = a.shape
     # 紙の色 = ふちの色の中央値
     edge = np.concatenate([a[0], a[-1], a[:, 0], a[:, -1]])
     paper = np.median(edge, axis=0)
     near = np.sqrt(((a - paper) ** 2).sum(axis=2)) < TOL
+    warm = OPTIONS.get(chara, {}).get('warm')
+    if warm is not None:
+        near &= (a[:, :, 0] - a[:, :, 2]) >= warm
     bg = np.zeros((h, w), bool)
     q = deque()
     for x in range(w):
@@ -70,6 +98,15 @@ def cut(chara, name, box):
             ny, nx = y + dy, x + dx
             if 0 <= ny < h and 0 <= nx < w and near[ny, nx] and not bg[ny, nx]:
                 bg[ny, nx] = True; q.append((ny, nx))
+    halo = OPTIONS.get(chara, {}).get('halo', 0)
+    if halo:
+        lum = a.mean(axis=2)
+        chroma = a.max(axis=2) - a.min(axis=2)
+        pale = (lum > 236) & (chroma < 22)
+        for _ in range(halo):
+            grow = np.zeros_like(bg)
+            grow[1:] |= bg[:-1]; grow[:-1] |= bg[1:]; grow[:, 1:] |= bg[:, :-1]; grow[:, :-1] |= bg[:, 1:]
+            bg |= grow & pale
     keep = ~bg
     # となりの絵や文字のかけらなど、小さくはなれた点を消す
     seen = np.zeros((h, w), bool)

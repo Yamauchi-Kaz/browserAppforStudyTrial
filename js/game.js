@@ -17,7 +17,7 @@
   const ENEMIES = [
     { key: 'kororun', name: 'コロルン', hp: 60, attack: 10 }, // 森のいたずらっ子（art/source/kororun-sheet.png の設定画から）
     { key: 'jureking', name: 'ジュレキング', hp: 80, attack: 12 }, // ぷるぷるの王さま（art/source/jureking-sheet.png の設定画から）
-    { key: 'mage', name: 'ダークまどうし', hp: 100, attack: 15 },
+    { key: 'blizzard', name: 'かいちょうブリザード', hp: 100, attack: 15 }, // 氷雪の峰の魔鳥（art/source/blizzard-sheet.png の設定画から）
     { key: 'golem', name: 'ストーンゴーレム', hp: 130, attack: 18 },
     { key: 'tenryuga', name: 'テンリュウガ', hp: 220, attack: 25, boss: true }, // 伝説の守護竜（art/source/tenryuga-sheet.png の設定画から）
   ];
