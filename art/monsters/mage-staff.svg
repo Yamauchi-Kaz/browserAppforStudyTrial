@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="480" viewBox="0 0 160 480">
+  <defs>
+    <linearGradient id="ms-wood" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c88a52"/>
+      <stop offset="0.5" stop-color="#8a5226"/>
+      <stop offset="1" stop-color="#4f2a10"/>
+    </linearGradient>
+    <radialGradient id="ms-orb" cx="38%" cy="32%" r="70%">
+      <stop offset="0" stop-color="#ffe6ff"/>
+      <stop offset="0.35" stop-color="#e45cff"/>
+      <stop offset="0.8" stop-color="#7a1fc4"/>
+      <stop offset="1" stop-color="#3e0a73"/>
+    </radialGradient>
+    <linearGradient id="ms-band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff0a8"/>
+      <stop offset="1" stop-color="#b8741a"/>
+    </linearGradient>
+  </defs>
+  <!-- ぼう（ねじれた木） -->
+  <path d="M74 110 C66 180 86 240 74 310 C66 370 82 420 76 470 L90 470 C96 420 82 370 90 310 C100 240 80 180 90 110 Z" fill="url(#ms-wood)" stroke="#2a160a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M78 150 q8 12 0 24 M84 230 q-8 12 0 24 M80 330 q8 12 0 24" fill="none" stroke="#2a160a" stroke-width="3" opacity="0.6"/>
+  <!-- 布のまきつけ -->
+  <path d="M68 250 L98 240 L98 262 L68 272 Z M68 276 L98 266 L98 286 L68 296 Z" fill="#c0392b" stroke="#2a160a" stroke-width="4" stroke-linejoin="round"/>
+  <!-- 手（ぼうをにぎる） -->
+  <path d="M60 252 C58 236 70 226 84 226 C98 226 106 236 104 252 C102 270 90 278 80 278 C68 278 62 268 60 252 Z" fill="#b9b3c9" stroke="#120c26" stroke-width="5"/>
+  <path d="M64 244 h38 M64 258 h38" stroke="#120c26" stroke-width="3" opacity="0.6"/>
+  <!-- 金のわく（つめ） -->
+  <path d="M82 120 C52 112 40 84 46 56 C58 70 66 80 78 84 Z" fill="url(#ms-band)" stroke="#2a160a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M82 120 C112 112 124 84 118 56 C106 70 98 80 86 84 Z" fill="url(#ms-band)" stroke="#2a160a" stroke-width="5" stroke-linejoin="round"/>
+  <!-- 玉 -->
+  <circle cx="82" cy="62" r="40" fill="url(#ms-orb)" stroke="#2a0a4a" stroke-width="6"/>
+  <path d="M60 50 C66 36 80 30 94 32" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="98" cy="80" r="5" fill="#ffffff" opacity="0.6"/>
+  <path d="M82 120 L72 110 L82 98 L92 110 Z" fill="url(#ms-band)" stroke="#2a160a" stroke-width="4"/>
+</svg>

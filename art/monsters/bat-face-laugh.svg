@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs><radialGradient id="i" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#fffbd0"/><stop offset="0.45" stop-color="#ffd23f"/><stop offset="1" stop-color="#e07d00"/></radialGradient><linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a0718"/><stop offset="1" stop-color="#6e1438"/></linearGradient></defs>
+  <path d="M172 238 L240 246" stroke="#241536" stroke-width="10" stroke-linecap="round"/>
+  <path d="M340 238 L272 246" stroke="#241536" stroke-width="10" stroke-linecap="round"/>
+  <path d="M184 299.02 Q210 268.6 236 299.02" fill="none" stroke="#241536" stroke-width="9" stroke-linecap="round"/>
+  <path d="M276 299.02 Q302 268.6 328 299.02" fill="none" stroke="#241536" stroke-width="9" stroke-linecap="round"/>
+  <path d="M200 316 Q256 338 312 316 Q300 372 256 374 Q212 372 200 316 Z" fill="url(#m)" stroke="#241536" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M262 352 C266 384 300 390 300 362 C298 350 286 348 262 352 Z" fill="#ff7aa8" stroke="#241536" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M280 356 L284 374" stroke="#d94f86" stroke-width="3" stroke-linecap="round"/>
+  <path d="M218 322 L226 344 L234 326 Z M294 326 L286 344 L278 322 Z" fill="#fff" stroke="#241536" stroke-width="3" stroke-linejoin="round"/>
+</svg>

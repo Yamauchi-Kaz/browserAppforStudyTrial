@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320">
+  <defs>
+    <linearGradient id="bw-mem" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9b6cf5"/>
+      <stop offset="0.6" stop-color="#5a33b0"/>
+      <stop offset="1" stop-color="#341a73"/>
+    </linearGradient>
+    <linearGradient id="bw-bone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b893ff"/>
+      <stop offset="1" stop-color="#8a5ce0"/>
+    </linearGradient>
+  </defs>
+  <!-- まく -->
+  <path d="M20 140 L170 56 L400 34 C380 80 372 130 366 176 C340 162 314 172 300 206 C276 196 244 214 236 252 C206 240 176 254 166 286 C130 250 70 210 24 196 Z"
+        fill="url(#bw-mem)" stroke="#241536" stroke-width="7" stroke-linejoin="round"/>
+  <clipPath id="bw-clip"><path d="M20 140 L170 56 L400 34 C380 80 372 130 366 176 C340 162 314 172 300 206 C276 196 244 214 236 252 C206 240 176 254 166 286 C130 250 70 210 24 196 Z"/></clipPath>
+  <g clip-path="url(#bw-clip)">
+    <!-- 骨のあいだのまくに 交互にかげ -->
+    <path d="M170 56 L366 176 L300 206 Z" fill="#1e0d47" opacity="0.35"/>
+    <path d="M170 56 L236 252 L166 286 Z" fill="#1e0d47" opacity="0.35"/>
+    <path d="M170 56 L20 140 L24 196 L166 286 Z" fill="#1e0d47" opacity="0.2"/>
+    <!-- 血管のすじ -->
+    <path d="M230 90 q30 30 60 40 M210 130 q20 30 50 50 M120 150 q20 30 30 60 M260 60 q40 10 80 4" fill="none" stroke="#c9a8ff" stroke-width="2" opacity="0.45" stroke-linecap="round"/>
+  </g>
+  <!-- まくのつや -->
+  <path d="M60 150 C120 120 200 90 300 70 C220 110 150 140 90 170 Z" fill="#c9a8ff" opacity="0.35"/>
+  <!-- ほね -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M20 140 L170 56 L400 34" stroke="#241536" stroke-width="16"/>
+    <path d="M170 56 L366 176 M170 56 L300 206 M170 56 L236 252 M170 56 L166 286" stroke="#241536" stroke-width="10"/>
+    <path d="M20 140 L170 56 L400 34" stroke="url(#bw-bone)" stroke-width="8"/>
+    <path d="M170 56 L366 176 M170 56 L300 206 M170 56 L236 252 M170 56 L166 286" stroke="#a37ae8" stroke-width="4"/>
+  </g>
+  <!-- 手首のつめ -->
+  <path d="M164 52 C160 30 170 14 186 8 C182 24 182 38 180 54 Z" fill="#f3ecff" stroke="#241536" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="170" cy="56" r="10" fill="#b893ff" stroke="#241536" stroke-width="5"/>
+</svg>

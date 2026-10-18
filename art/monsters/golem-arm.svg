@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="320" viewBox="0 0 200 320">
+  <defs>
+    <linearGradient id="ga-stone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#cfd5dc"/>
+      <stop offset="0.55" stop-color="#939ca8"/>
+      <stop offset="1" stop-color="#5a6370"/>
+    </linearGradient>
+    <clipPath id="ga-fist"><path d="M30 214 L70 198 L150 200 L176 226 L178 286 L150 314 L58 316 L26 284 Z"/></clipPath>
+  </defs>
+  <g stroke="#1e2229" stroke-linejoin="round">
+    <!-- 二のうで -->
+    <path d="M62 76 L132 70 L140 150 L120 186 L72 190 L56 150 Z" fill="url(#ga-stone)" stroke-width="7"/>
+    <path d="M132 70 L140 150 L120 186 L104 120 Z" fill="#3e4552" stroke="none" opacity="0.45"/>
+    <path d="M58 150 L138 150" fill="none" stroke-width="4"/>
+    <!-- こぶし -->
+    <path d="M30 214 L70 198 L150 200 L176 226 L178 286 L150 314 L58 316 L26 284 Z" fill="url(#ga-stone)" stroke-width="8"/>
+    <g clip-path="url(#ga-fist)" stroke="none">
+      <path d="M30 214 L70 198 L150 200 L110 236 L28 246 Z" fill="#e3e8ee" opacity="0.5"/>
+      <path d="M178 286 L150 314 L58 316 L120 270 L176 240 Z" fill="#3e4552" opacity="0.45"/>
+    </g>
+    <path d="M30 246 L176 240 M70 200 L64 246 M110 200 L110 244 M148 202 L150 242" fill="none" stroke-width="4"/>
+    <!-- かたの岩 -->
+    <path d="M24 70 L40 24 L96 6 L150 18 L176 56 L162 96 L104 108 L48 100 Z" fill="url(#ga-stone)" stroke-width="8"/>
+    <path d="M40 24 L96 6 L150 18 L100 52 L24 70 Z" fill="#eef1f5" stroke="none" opacity="0.5"/>
+    <path d="M176 56 L162 96 L104 108 L118 66 Z" fill="#3e4552" stroke="none" opacity="0.45"/>
+    <path d="M24 70 L100 52 L150 18 M100 52 L104 108" fill="none" stroke-width="4"/>
+  </g>
+  <path d="M44 30 C52 14 76 10 90 18 C100 10 120 12 124 24 C104 32 66 38 44 30 Z" fill="#8ccf55" stroke="#1e3a18" stroke-width="4" stroke-linejoin="round"/>
+</svg>

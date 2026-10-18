@@ -438,6 +438,132 @@
     }
   }
 
+  // ---------- イラスト（art/ の SVG）。体・パーツ・表情を重ねて動かす ----------
+  // SVG は 512x512（パーツは自分の大きさ）。読みこんだら一度だけ高解像度の画像にしておく。
+  const ART_DIR = 'art/';
+  const EXPRESSIONS = ['normal', 'blink', 'angry', 'hurt', 'laugh', 'ko'];
+  const SPRITES = {};
+  // scale: どれだけ細かく画像にするか（スマホのメモリを使いすぎないように、モンスター 1.25倍・背景 1倍）
+  function loadSprite(path, scale = 1.25) {
+    if (SPRITES[path] !== undefined) return;
+    SPRITES[path] = null;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      const k = scale;
+      c.width = img.width * k;
+      c.height = img.height * k;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.w = img.width;
+      c.h = img.height;
+      SPRITES[path] = c;
+    };
+    img.src = ART_DIR + path;
+  }
+  const sprite = (name) => SPRITES['monsters/' + name + '.svg'];
+
+  const wave = (t, speed, amp, phase = 0) => Math.sin(t * speed + phase) * amp;
+
+  // box: SVG の中で絵がある上はしと下はし（下はし = 足もと）
+  // parts: at = 体のどこにつけるか、pivot = パーツのどこを中心に回すか、z < 0 は体のうしろ
+  const RIGS = {
+    slime: { box: [80, 505] },
+    bat: {
+      box: [70, 470],
+      parts: [
+        { img: 'bat-wing', at: [192, 262], pivot: [20, 140], scale: 0.85, flip: true, z: -1,
+          anim: (t, st) => ({ rot: wave(t, st.mode === 'attack' ? 22 : 11, 0.5) - 0.1 }) },
+        { img: 'bat-wing', at: [320, 262], pivot: [20, 140], scale: 0.85, z: -1,
+          anim: (t, st) => ({ rot: wave(t, st.mode === 'attack' ? 22 : 11, 0.5) - 0.1 }) },
+      ],
+    },
+    mage: {
+      box: [30, 495],
+      mouth: [378, 104], // まほうが出るところ（つえの玉）
+      parts: [
+        { img: 'mage-staff', at: [378, 294], pivot: [82, 252], z: 1,
+          // こうげきのときは つえを高くかかげる
+          anim: (t, st) => ({ rot: st.mode === 'attack' ? -0.5 * Math.sin(Math.min(st.p / 0.75, 1) * Math.PI) : wave(t, 1.6, 0.06) }),
+          glow: { at: [82, 62], r: 70, color: '224,92,255' } },
+      ],
+    },
+    golem: {
+      box: [86, 498],
+      glow: { at: [262, 300], r: 90, color: '63,242,255' },
+      parts: [
+        { img: 'golem-arm', at: [124, 210], pivot: [96, 56], flip: true, z: -1,
+          anim: (t, st) => ({ rot: st.mode === 'attack' ? -1.1 * Math.sin(Math.min(st.p / 0.75, 1) * Math.PI) : wave(t, 1.8, 0.06) }) },
+        { img: 'golem-arm', at: [388, 210], pivot: [96, 56], z: -1,
+          anim: (t, st) => ({ rot: st.mode === 'attack' ? -1.1 * Math.sin(Math.min(st.p / 0.75, 1) * Math.PI) : wave(t, 1.8, 0.06, Math.PI) }) },
+      ],
+    },
+    dragon: {
+      box: [36, 500],
+      mouth: [256, 212], // 火をはく口
+      glow: { at: [300, 214], r: 60, color: '255,150,0' },
+      parts: [
+        { img: 'dragon-tail', at: [326, 440], pivot: [20, 190], z: -1, anim: (t) => ({ rot: wave(t, 2, 0.12) }) },
+        { img: 'dragon-wing', at: [228, 262], pivot: [24, 220], flip: true, z: -1,
+          anim: (t, st) => ({ rot: st.mode === 'attack' ? -0.3 : wave(t, 2.4, 0.12) }) },
+        { img: 'dragon-wing', at: [284, 262], pivot: [24, 220], z: -1,
+          anim: (t, st) => ({ rot: st.mode === 'attack' ? -0.3 : wave(t, 2.4, 0.12) }) },
+      ],
+    },
+  };
+  for (const [key, rig] of Object.entries(RIGS)) {
+    loadSprite(`monsters/${key}.svg`);
+    for (const e of EXPRESSIONS) loadSprite(`monsters/${key}-face-${e}.svg`);
+    for (const p of rig.parts || []) loadSprite(`monsters/${p.img}.svg`);
+  }
+  for (const name of ['field', 'cave', 'castle', 'ruins', 'volcano']) loadSprite(`bg/${name}.svg`, 1);
+
+  function rigReady(key) {
+    const rig = RIGS[key];
+    if (!rig || !sprite(key)) return false;
+    return (rig.parts || []).every((p) => sprite(p.img)) && EXPRESSIONS.every((e) => sprite(`${key}-face-${e}`));
+  }
+
+  function drawGlow(o, x, y, r, color, a) {
+    const g = o.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(${color},${0.55 * a})`);
+    g.addColorStop(1, `rgba(${color},0)`);
+    o.save();
+    o.globalCompositeOperation = 'lighter';
+    o.fillStyle = g;
+    o.fillRect(x - r, y - r, r * 2, r * 2);
+    o.restore();
+  }
+
+  // 足もとが (0,0)、高さ height になるように描く
+  function drawRig(o, key, height, t, expr, st) {
+    const rig = RIGS[key];
+    const [top, bottom] = rig.box;
+    const u = height / (bottom - top);
+    const pulse = 0.75 + 0.25 * Math.sin(t * 3);
+    o.save();
+    o.scale(u, u);
+    o.translate(-256, -bottom);
+    const drawPart = (p) => {
+      const img = sprite(p.img);
+      const a = p.anim ? p.anim(t, st) : {};
+      const sc = p.scale || 1;
+      o.save();
+      o.translate(p.at[0], p.at[1]);
+      if (p.flip) o.scale(-1, 1);
+      o.rotate(a.rot || 0);
+      o.scale(sc, sc);
+      o.drawImage(img, -p.pivot[0], -p.pivot[1], img.w, img.h);
+      if (p.glow) drawGlow(o, p.glow.at[0] - p.pivot[0], p.glow.at[1] - p.pivot[1], p.glow.r, p.glow.color, pulse);
+      o.restore();
+    };
+    for (const p of rig.parts || []) if (p.z < 0) drawPart(p);
+    o.drawImage(sprite(key), 0, 0, 512, 512);
+    if (rig.glow && expr !== 'ko') drawGlow(o, rig.glow.at[0], rig.glow.at[1], rig.glow.r, rig.glow.color, pulse);
+    o.drawImage(sprite(`${key}-face-${expr}`), 0, 0, 512, 512);
+    for (const p of rig.parts || []) if (!(p.z < 0)) drawPart(p);
+    o.restore();
+  }
+
   function hills(ctx, w, h, baseY, amp, freq, phase, color) {
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -518,6 +644,15 @@
 
     setMode(mode) { this.mode = mode; this.modeStart = performance.now(); }
 
+    // いまの表情（場面に合わせて かえる）
+    expression(now) {
+      if (this.mode === 'defeat') return 'ko';
+      if (now < (this.hurtUntil || 0)) return 'hurt';
+      if (this.mode === 'attack' || (this.danger && this.mode === 'idle')) return 'angry';
+      if (this.mode === 'taunt') return 'laugh';
+      return isBlink(now / 1000, 3.3) ? 'blink' : 'normal';
+    }
+
     setMonster(key) {
       this.monsterKey = key;
       this.themeKey = MONSTERS[key].theme;
@@ -558,6 +693,7 @@
       const c = this.center;
       this.flash = 1;
       this.knock = 1;
+      this.hurtUntil = performance.now() + 650;
       this.freezeUntil = performance.now() + (critical ? 140 : 80);
       this.shake = critical ? 12 : 6;
       if (this.mode === 'idle' || this.mode === 'taunt') this.setMode('idle');
@@ -582,7 +718,16 @@
       const colors = fx === 'fire' ? ['#ff6d00', '#ffd600', '#ff3d00'] : fx === 'magic' ? ['#e040fb', '#ea80fc', '#7c4dff'] : null;
       if (colors) {
         // 0.6びょうのあいだ、口（つえ）から ほのお・まほうを出しつづける
-        this.emitter = { until: performance.now() + 600, colors, star: fx === 'magic', x: c.x, y: c.y - (fx === 'fire' ? 70 * this.scale : 0) };
+        let ex = c.x, ey = c.y - (fx === 'fire' ? 70 * this.scale : 0);
+        const rig = RIGS[this.monsterKey];
+        if (rig && rig.mouth && rigReady(this.monsterKey)) {
+          // イラストの口・つえの位置から出す
+          const m = MONSTERS[this.monsterKey];
+          const u = (m.height / (rig.box[1] - rig.box[0])) * this.scale * (m.size || 1);
+          ex = this.w / 2 + (rig.mouth[0] - 256) * u;
+          ey = this.groundY - (rig.box[1] - rig.mouth[1]) * u;
+        }
+        this.emitter = { until: performance.now() + 600, colors, star: fx === 'magic', x: ex, y: ey };
       }
       if (fx === 'quake') this.burst(this.w / 2, this.groundY, 30, '#bcaaa4');
       return new Promise((resolve) => setTimeout(resolve, 330));
@@ -670,12 +815,13 @@
       const th = this.theme;
       const w = this.w, h = this.h;
       const drift = this.reduceMotion ? 0 : t;
-      const bg = IMAGES.backgrounds[this.themeKey];
+      const bg = IMAGES.backgrounds[this.themeKey] || SPRITES[`bg/${this.themeKey}.svg`];
       if (bg) {
         // 画面をうめるように少し大きめに描き、ゆっくり左右に動かして奥行きを出す
         const zoom = 1.08;
-        const s = Math.max(w / bg.width, h / bg.height) * zoom;
-        const bw = bg.width * s, bh = bg.height * s;
+        const iw = bg.w || bg.width, ih = bg.h || bg.height;
+        const s = Math.max(w / iw, h / ih) * zoom;
+        const bw = iw * s, bh = ih * s;
         const x = (w - bw) / 2 + Math.sin(drift * 0.12) * (bw - w) * 0.4;
         const y = h - bh + (bh - h) * 0.15;
         ctx.drawImage(bg, x, y, bw, bh);
@@ -758,7 +904,7 @@
         }
         if (q >= 1) this.setMode('idle');
       } else if (this.mode === 'taunt') {
-        const q = Math.min(p / 0.7, 1);
+        const q = Math.min(p / 1.2, 1);
         ox += Math.sin(q * Math.PI * 4) * 14 * k;
         rot += Math.sin(q * Math.PI * 4) * 0.08;
         if (q >= 1) this.setMode('idle');
@@ -809,6 +955,10 @@
         const dw = dh * (img.width / img.height);
         o.scale(1 - breathe * 0.5, 1 + breathe);
         o.drawImage(img, -dw / 2, -dh, dw, dh);
+      } else if (rigReady(this.monsterKey)) {
+        const breathe = this.reduceMotion ? 0 : Math.sin(mt * 2.2) * 0.02;
+        o.scale(1 - breathe * 0.5, 1 + breathe);
+        drawRig(o, this.monsterKey, m.height, this.reduceMotion ? 0 : mt, this.expression(now), { mode: this.mode, p });
       } else {
         m.draw(o, mt);
       }

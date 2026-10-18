@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs><radialGradient id="i" cx="45%" cy="40%" r="65%"><stop offset="0" stop-color="#fffbd0"/><stop offset="0.5" stop-color="#ffd23f"/><stop offset="1" stop-color="#ff8a00"/></radialGradient><radialGradient id="f" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff7b0"/><stop offset="0.5" stop-color="#ffb000"/><stop offset="1" stop-color="#ff4d00"/></radialGradient></defs>
+  <path d="M200 140 C206 128 224 128 240 140 C232 154 210 156 200 140 Z" fill="url(#i)" stroke="#2a0d0a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M312 140 C306 128 288 128 272 140 C280 154 302 156 312 140 Z" fill="url(#i)" stroke="#2a0d0a" stroke-width="5" stroke-linejoin="round"/>
+  <ellipse cx="222" cy="142" rx="2.5" ry="7" fill="#1a0505"/><ellipse cx="290" cy="142" rx="2.5" ry="7" fill="#1a0505"/>
+  <circle cx="214" cy="138" r="3.5" fill="#fff"/><circle cx="282" cy="138" r="3.5" fill="#fff"/>
+  <path d="M192 112 L248 138 L242 148 L188 126 Z" fill="#8c1a0e" stroke="#2a0d0a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M320 112 L264 138 L270 148 L324 126 Z" fill="#8c1a0e" stroke="#2a0d0a" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M200 192 C206 250 306 250 312 192 C290 206 222 206 200 192 Z" fill="#3a0606" stroke="#2a0d0a" stroke-width="6" stroke-linejoin="round"/>
+  <ellipse cx="256" cy="222" rx="40" ry="16" fill="url(#f)"/>
+  <path d="M210 198 L218 218 L228 202 Z M284 202 L294 218 L302 198 Z M226 240 L234 226 L242 242 Z M270 242 L278 226 L286 240 Z" fill="#fff" stroke="#2a0d0a" stroke-width="3" stroke-linejoin="round"/>
+</svg>

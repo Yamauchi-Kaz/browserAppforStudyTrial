@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="220" viewBox="0 0 240 220">
+  <defs>
+    <linearGradient id="dt-skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e64a22"/>
+      <stop offset="1" stop-color="#8c1a0e"/>
+    </linearGradient>
+  </defs>
+  <path d="M20 190 C80 200 150 190 180 140 C196 112 192 80 176 60" fill="none" stroke="#2a0d0a" stroke-width="44" stroke-linecap="round"/>
+  <path d="M20 190 C80 200 150 190 180 140 C196 112 192 80 176 60" fill="none" stroke="url(#dt-skin)" stroke-width="32" stroke-linecap="round"/>
+  <path d="M40 186 C90 192 140 182 166 140" fill="none" stroke="#ffcc55" stroke-width="8" stroke-linecap="round"/>
+  <!-- しっぽの先 -->
+  <path d="M176 66 L150 30 L200 6 L222 44 L190 74 Z" fill="#ffb347" stroke="#2a0d0a" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M176 60 L198 22" stroke="#e2611b" stroke-width="4"/>
+  <path d="M80 160 l6 -16 l10 14 M130 150 l10 -14 l6 16" fill="#ffb347" stroke="#2a0d0a" stroke-width="4" stroke-linejoin="round"/>
+</svg>

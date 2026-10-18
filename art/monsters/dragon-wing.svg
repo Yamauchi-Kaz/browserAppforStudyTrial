@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="360" viewBox="0 0 400 360">
+  <defs>
+    <linearGradient id="dw-mem" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff7a3d"/>
+      <stop offset="0.55" stop-color="#c2381a"/>
+      <stop offset="1" stop-color="#6e130a"/>
+    </linearGradient>
+    <clipPath id="dw-clip"><path d="M24 220 L150 70 L386 18 C372 70 372 120 378 170 C340 160 312 178 304 214 C276 204 244 222 238 262 C210 252 180 268 172 304 C120 270 70 250 30 260 Z"/></clipPath>
+  </defs>
+  <path d="M24 220 L150 70 L386 18 C372 70 372 120 378 170 C340 160 312 178 304 214 C276 204 244 222 238 262 C210 252 180 268 172 304 C120 270 70 250 30 260 Z" fill="url(#dw-mem)" stroke="#2a0d0a" stroke-width="7" stroke-linejoin="round"/>
+  <g clip-path="url(#dw-clip)">
+    <path d="M150 70 L378 170 L304 214 Z" fill="#4a0b05" opacity="0.35"/>
+    <path d="M150 70 L238 262 L172 304 Z" fill="#4a0b05" opacity="0.35"/>
+    <path d="M60 220 C120 160 220 110 330 70" fill="none" stroke="#ffb08a" stroke-width="6" opacity="0.35" stroke-linecap="round"/>
+    <path d="M230 120 q30 20 50 50 M200 160 q20 30 30 60 M110 200 q20 20 30 60" fill="none" stroke="#ff9a6a" stroke-width="2" opacity="0.5"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <path d="M24 220 L150 70 L386 18" stroke="#2a0d0a" stroke-width="20"/>
+    <path d="M150 70 L378 170 M150 70 L304 214 M150 70 L238 262 M150 70 L172 304" stroke="#2a0d0a" stroke-width="12"/>
+    <path d="M24 220 L150 70 L386 18" stroke="#a51f10" stroke-width="11"/>
+    <path d="M150 70 L378 170 M150 70 L304 214 M150 70 L238 262 M150 70 L172 304" stroke="#8c1a0e" stroke-width="5"/>
+  </g>
+  <path d="M146 64 C142 48 148 36 160 30 C158 42 158 52 158 64 Z" fill="#7a150b" stroke="#2a0d0a" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="150" cy="70" r="12" fill="#c7351a" stroke="#2a0d0a" stroke-width="5"/>
+</svg>
