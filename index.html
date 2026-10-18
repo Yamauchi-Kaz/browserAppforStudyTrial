@@ -27,6 +27,15 @@
         </div>
       </div>
 
+      <div class="panel">
+        <h2>こたえかた</h2>
+        <div class="chips">
+          <label class="chip"><input type="radio" name="mode" id="mode-keyboard" value="keyboard" checked><span>⌨️ キーボード</span></label>
+          <label class="chip"><input type="radio" name="mode" id="mode-voice" value="voice"><span>🎤 おはなし（声でこたえる）</span></label>
+        </div>
+        <p class="note" id="voice-note" hidden>このブラウザーでは声でこたえられません。Chrome・Edge・Safari で開いてね。</p>
+      </div>
+
       <button id="btn-start" class="btn big">スタート！</button>
     </section>
 
@@ -51,11 +60,12 @@
       </div>
 
       <form id="answer-form" class="answer-row" autocomplete="off">
-        <input id="answer-input" type="text" placeholder="こたえを入力してね" enterkeyhint="send">
+        <input id="answer-input" type="text" placeholder="こたえ" enterkeyhint="send">
         <button type="button" id="btn-mic" class="btn mic" title="声でこたえる" hidden>🎤</button>
         <button type="submit" class="btn">こたえる</button>
       </form>
 
+      <div class="heard" id="heard"></div>
       <div class="feedback" id="feedback"></div>
 
       <div class="player-area">

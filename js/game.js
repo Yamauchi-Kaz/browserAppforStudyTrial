@@ -41,6 +41,9 @@
     form: $('answer-form'),
     input: $('answer-input'),
     mic: $('btn-mic'),
+    heard: $('heard'),
+    modeVoice: $('mode-voice'),
+    voiceNote: $('voice-note'),
     feedback: $('feedback'),
     playerHpFill: $('player-hp-fill'),
     playerHpText: $('player-hp-text'),
@@ -51,6 +54,7 @@
   let state = null;
   let timerId = null;
   let composing = false;
+  let listener = null; // 音声認識（使えないブラウザーでは null）
 
   // ---------- 効果音（Web Audio で作るので音声ファイル不要） ----------
   let audioCtx = null;
@@ -135,8 +139,10 @@
       return;
     }
     const level = document.querySelector('input[name="level"]:checked').value;
+    const voiceMode = !!listener && el.modeVoice.checked;
     state = {
       level,
+      voiceMode,
       timeLimit: LEVELS[level].time,
       nextQuestion: createQuestionDeck(subjects, level),
       hp: PLAYER_MAX_HP,
@@ -153,7 +159,33 @@
       mistakes: [],
     };
     showScreen('battle');
-    spawnEnemy();
+    el.heard.textContent = '';
+    if (voiceMode) {
+      // スタートボタンを押したタイミングでマイクの許可をもらっておく
+      requestMicPermission().then((ok) => {
+        if (!ok) disableVoiceMode('マイクが使えないので、キーボードでこたえてね');
+        spawnEnemy();
+      });
+    } else {
+      spawnEnemy();
+    }
+  }
+
+  async function requestMicPermission() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function disableVoiceMode(message) {
+    if (state) state.voiceMode = false;
+    if (listener) listener.stop();
+    el.heard.textContent = message;
   }
 
   function spawnEnemy() {
@@ -176,8 +208,12 @@
     el.question.textContent = state.question.q;
     el.input.value = '';
     el.input.disabled = false;
-    el.input.focus();
+    if (!state.voiceMode) el.input.focus();
     setFeedback('');
+    if (state.voiceMode) {
+      el.heard.textContent = '🎤 きいてるよ… こたえを言ってね';
+      listener.start();
+    }
     state.startedAt = performance.now();
     clearInterval(timerId);
     timerId = setInterval(tick, 50);
@@ -205,8 +241,14 @@
     if (!state || state.locked || composing) return;
     const input = el.input.value;
     if (!input.trim()) return;
+    submitAnswer([input]);
+  }
 
-    const { result } = judge(input, state.question);
+  // candidates: 答えの候補（音声認識では聞き取りの候補が複数来る）
+  function submitAnswer(candidates) {
+    if (!state || state.locked) return;
+    const results = candidates.map((c) => judge(c, state.question).result);
+    const result = results.includes('correct') ? 'correct' : results.includes('close') ? 'close' : 'wrong';
     if (result === 'correct') {
       onCorrect();
     } else {
@@ -215,12 +257,13 @@
       state.combo = 0;
       renderHp();
       setFeedback(result === 'close' ? 'おしい！もういちど！' : 'ざんねん…もういちど！', result === 'close' ? 'close' : 'bad');
-      el.input.select();
+      if (!state.voiceMode) el.input.select();
     }
   }
 
   function onCorrect() {
     state.locked = true;
+    if (listener) listener.stop();
     clearInterval(timerId);
     const ratio = remainingRatio();
     state.combo += 1;
@@ -247,6 +290,7 @@
     if (state.locked) return;
     state.locked = true;
     clearInterval(timerId);
+    if (listener) listener.stop();
     el.input.disabled = true;
     state.timeouts += 1;
     state.combo = 0;
@@ -280,6 +324,7 @@
 
   function endGame(win) {
     clearInterval(timerId);
+    if (listener) listener.stop();
     state.locked = true;
     $('result-title').textContent = win ? '🎉 ゲームクリア！ 🎉' : '😢 ゲームオーバー';
     $('result-score').textContent = state.score;
@@ -298,30 +343,96 @@
   }
 
   // ---------- 音声入力（ブラウザーの機能なので無料。Chrome / Edge / Safari） ----------
-  function setupMic() {
+  // start() すると、止めるまで聞き取りを続ける（1回聞きおわるたびに自動でまた聞きはじめる）
+  function createListener(handlers) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return;
-    el.mic.hidden = false;
+    if (!SR) return null;
     let rec = null;
-    el.mic.addEventListener('click', () => {
-      if (rec) { rec.stop(); return; }
+    let wanted = false;
+
+    function begin() {
+      if (rec || !wanted) return;
       rec = new SR();
       rec.lang = 'ja-JP';
-      rec.interimResults = false;
+      rec.interimResults = true;
+      rec.maxAlternatives = 5;
       rec.onresult = (e) => {
-        el.input.value = e.results[0][0].transcript;
-        el.form.requestSubmit();
+        const res = e.results[e.results.length - 1];
+        if (res.isFinal) handlers.onFinal(Array.from(res, (alt) => alt.transcript));
+        else handlers.onInterim(res[0].transcript);
       };
-      rec.onend = () => { rec = null; el.mic.classList.remove('listening'); };
-      rec.onerror = () => { rec = null; el.mic.classList.remove('listening'); };
-      el.mic.classList.add('listening');
-      rec.start();
+      rec.onerror = (e) => {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          wanted = false;
+          handlers.onFatal();
+        }
+      };
+      rec.onend = () => {
+        rec = null;
+        handlers.onState(wanted);
+        if (wanted) setTimeout(begin, 150);
+      };
+      try {
+        rec.start();
+        handlers.onState(true);
+      } catch (e) {
+        rec = null;
+      }
+    }
+
+    return {
+      start() { wanted = true; begin(); },
+      stop() {
+        wanted = false;
+        if (rec) rec.abort();
+        handlers.onState(false);
+      },
+      get active() { return wanted; },
+    };
+  }
+
+  function setupVoice() {
+    listener = createListener({
+      onInterim(text) {
+        el.heard.textContent = `🎤 「${text}」…`;
+      },
+      onFinal(candidates) {
+        const shown = (state && state.question && candidates.find((c) => judge(c, state.question).result === 'correct')) || candidates[0];
+        el.heard.textContent = `🎤 「${shown}」ってきこえたよ`;
+        el.input.value = shown;
+        // キーボードモードでボタンから話したときは1回でおわり
+        if (!state || !state.voiceMode) listener.stop();
+        submitAnswer(candidates);
+      },
+      onFatal() {
+        disableVoiceMode('マイクが使えないので、キーボードでこたえてね');
+      },
+      onState(on) {
+        el.mic.classList.toggle('listening', on);
+      },
+    });
+
+    if (!listener) {
+      el.modeVoice.disabled = true;
+      el.voiceNote.hidden = false;
+      return;
+    }
+    el.mic.hidden = false;
+    el.mic.addEventListener('click', () => {
+      if (!state || state.locked) return;
+      if (listener.active) {
+        listener.stop();
+        if (state.voiceMode) el.heard.textContent = '🎤 おやすみ中（ボタンでまた聞きはじめるよ）';
+      } else {
+        el.heard.textContent = '🎤 きいてるよ…';
+        listener.start();
+      }
     });
   }
 
   // ---------- 初期化 ----------
   renderSubjects();
-  setupMic();
+  setupVoice();
   el.start.addEventListener('click', startGame);
   el.retry.addEventListener('click', () => showScreen('title'));
   el.form.addEventListener('submit', onSubmit);
