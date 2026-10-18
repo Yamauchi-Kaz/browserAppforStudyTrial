@@ -418,6 +418,18 @@
     },
   };
 
+  // コロルン: キャラクター設定画のポーズを切りぬいた絵で動く（js/stage.js の POSE_RIGS）
+  MONSTERS.kororun = {
+    theme: 'field',
+    height: 200,
+    defeatStyle: 'fall', // くるくる回らず、たおれた絵のまま消える
+    pose(t) {
+      const b = Math.abs(Math.sin(t * 2.6));
+      return { y: -b * 6, sy: 1 + Math.sin(t * 5.2) * 0.012, shadow: 1 - b * 0.1 };
+    },
+    draw(ctx, t) { MONSTERS.slime.draw(ctx, t); }, // 絵の読みこみ前だけ使う
+  };
+
   // ---------- 背景 ----------
   const THEMES = {
     field: { sky: ['#8fd3ff', '#e8f8ff'], far: '#9ccc65', near: '#5aa95f', ground: '#7cb342', particle: 'leaf', pcolor: '#4caf50' },
@@ -516,6 +528,31 @@
     for (const p of rig.parts || []) loadSprite(`monsters/${p.img}.svg`);
   }
   for (const name of ['field', 'cave', 'castle', 'ruins', 'volcano']) loadSprite(`bg/${name}.svg`, 1);
+
+  // 1枚絵のポーズを場面で切りかえるキャラクター。cx = 絵の中のキャラのまん中（横の位置、0〜1）
+  const POSE_RIGS = {
+    kororun: {
+      dir: 'monsters/kororun/',
+      base: 'idle',
+      poses: { idle: 0.43, happy: 0.52, angry: 0.48, attack: 0.75, hurt: 0.45, dizzy: 0.5, down: 0.55 },
+    },
+  };
+  for (const [key, r] of Object.entries(POSE_RIGS)) {
+    for (const name of Object.keys(r.poses)) loadSprite(`${r.dir}${name}.webp`, 1);
+  }
+  const poseSprite = (key, name) => SPRITES[`${POSE_RIGS[key].dir}${name}.webp`];
+  function posesReady(key) {
+    const r = POSE_RIGS[key];
+    return !!r && Object.keys(r.poses).every((n) => poseSprite(key, n));
+  }
+
+  // 足もとが (0,0)、ふつうのポーズの高さが height になるように描く
+  function drawPose(o, key, name, height) {
+    const r = POSE_RIGS[key];
+    const img = poseSprite(key, name);
+    const u = height / poseSprite(key, r.base).h;
+    o.drawImage(img, -r.poses[name] * img.w * u, -img.h * u, img.w * u, img.h * u);
+  }
 
   function rigReady(key) {
     const rig = RIGS[key];
@@ -644,6 +681,16 @@
 
     setMode(mode) { this.mode = mode; this.modeStart = performance.now(); }
 
+    // ポーズで動くキャラクターの、いまのポーズ
+    poseName(now, p) {
+      if (this.mode === 'defeat') return 'down';
+      if (now < (this.hurtUntil || 0)) return this.hurtBig ? 'dizzy' : 'hurt';
+      if (this.mode === 'attack') return p < 0.2 ? 'angry' : 'attack';
+      if (this.danger && this.mode === 'idle') return 'angry';
+      if (this.mode === 'taunt') return 'happy';
+      return 'idle';
+    }
+
     // いまの表情（場面に合わせて かえる）
     expression(now) {
       if (this.mode === 'defeat') return 'ko';
@@ -693,7 +740,8 @@
       const c = this.center;
       this.flash = 1;
       this.knock = 1;
-      this.hurtUntil = performance.now() + 650;
+      this.hurtUntil = performance.now() + (critical ? 900 : 650);
+      this.hurtBig = critical;
       this.freezeUntil = performance.now() + (critical ? 140 : 80);
       this.shake = critical ? 12 : 6;
       if (this.mode === 'idle' || this.mode === 'taunt') this.setMode('idle');
@@ -910,9 +958,15 @@
         if (q >= 1) this.setMode('idle');
       } else if (this.mode === 'defeat') {
         const q = Math.min(p / 0.9, 1);
-        rot += q * Math.PI * 3;
-        sc = 1 - easeOutBack(q) * 0.9;
-        alpha = 1 - q;
+        if (m.defeatStyle === 'fall') {
+          // たおれた絵のまま、少しはねてから消える
+          oy -= Math.sin(Math.min(q / 0.35, 1) * Math.PI) * 16 * k;
+          alpha = q < 0.55 ? 1 : 1 - (q - 0.55) / 0.45;
+        } else {
+          rot += q * Math.PI * 3;
+          sc = 1 - easeOutBack(q) * 0.9;
+          alpha = 1 - q;
+        }
         if (q >= 1) { this.mode = 'none'; return; }
       }
       if (this.knock > 0) {
@@ -955,6 +1009,14 @@
         const dw = dh * (img.width / img.height);
         o.scale(1 - breathe * 0.5, 1 + breathe);
         o.drawImage(img, -dw / 2, -dh, dw, dh);
+      } else if (posesReady(this.monsterKey)) {
+        // 場面に合うポーズをえらぶ。切りかわった瞬間は ぽんっと少し大きくする
+        const name = this.poseName(now, p);
+        if (name !== this.lastPose) { this.lastPose = name; this.poseAt = now; }
+        const pop = 1 + 0.08 * Math.max(0, 1 - (now - this.poseAt) / 160);
+        const breathe = this.reduceMotion ? 0 : Math.sin(mt * 2.2) * 0.015;
+        o.scale(pop * (1 - breathe * 0.5), pop * (1 + breathe));
+        drawPose(o, this.monsterKey, name, m.height);
       } else if (rigReady(this.monsterKey)) {
         const breathe = this.reduceMotion ? 0 : Math.sin(mt * 2.2) * 0.02;
         o.scale(1 - breathe * 0.5, 1 + breathe);
