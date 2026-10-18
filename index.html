@@ -16,7 +16,7 @@
     <!-- タイトル画面 -->
     <section id="screen-title" class="screen active">
       <h1>⚔️ こたえてバトル ⚔️</h1>
-      <p class="lead">問題に日本語でこたえて、モンスターをたおそう！<br>はやくこたえるほど、大ダメージ！</p>
+      <p class="lead">もんだいに にほんごで こたえて、モンスターを たおそう！<br>はやく こたえるほど、おおダメージ！</p>
       <div class="title-show">
         <canvas id="title-stage" class="title-canvas"></canvas>
         <div class="title-monster" id="title-monster-name"></div>
@@ -40,9 +40,9 @@
         <h2>こたえかた</h2>
         <div class="chips">
           <label class="chip"><input type="radio" name="mode" id="mode-keyboard" value="keyboard" checked><span>⌨️ キーボード</span></label>
-          <label class="chip"><input type="radio" name="mode" id="mode-voice" value="voice"><span>🎤 おはなし（声でこたえる）</span></label>
+          <label class="chip"><input type="radio" name="mode" id="mode-voice" value="voice"><span>🎤 おはなし（こえで こたえる）</span></label>
         </div>
-        <p class="note" id="voice-note" hidden>このブラウザーでは声でこたえられません。Chrome・Edge・Safari で開いてね。</p>
+        <p class="note" id="voice-note" hidden>この ブラウザーでは こえで こたえられません。Chrome・Edge・Safari で ひらいてね。</p>
       </div>
 
       <button id="btn-start" class="btn big">スタート！</button>
@@ -72,7 +72,7 @@
 
       <form id="answer-form" class="answer-row" autocomplete="off">
         <input id="answer-input" type="text" placeholder="こたえ" enterkeyhint="send">
-        <button type="button" id="btn-mic" class="btn mic" title="声でこたえる" hidden>🎤</button>
+        <button type="button" id="btn-mic" class="btn mic" title="こえで こたえる" hidden>🎤</button>
         <button type="submit" class="btn">こたえる</button>
       </form>
 
@@ -96,7 +96,7 @@
         <p>たおしたモンスター：<strong id="result-defeated">0</strong> ひき</p>
       </div>
       <div class="panel" id="review-panel">
-        <h2>まちがえた問題をふりかえろう</h2>
+        <h2>まちがえた もんだいを ふりかえろう</h2>
         <ul id="review-list"></ul>
       </div>
       <button id="btn-retry" class="btn big">もういちど</button>

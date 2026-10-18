@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { judge, extractNumber } = require('../js/judge.js');
-const { FIXED, makeMathQuestion } = require('../js/questions.js');
+const { FIXED, makeMathQuestion, parseRuby, plainText } = require('../js/questions.js');
 
 const tokyo = { type: 'text', answers: ['東京', 'とうきょう', '東京都', 'とうきょうと'] };
 const ieyasu = { type: 'text', answers: ['徳川家康', 'とくがわいえやす', '家康', 'いえやす'] };
@@ -74,6 +74,20 @@ test('さんすうは 1けた±1けた と 10〜19±1けた だけ', () => {
       if (op === '＋') assert.ok(a <= 9 || a + b <= 20, q.q);
       else assert.ok(a - b >= 0, q.q);
     }
+  }
+});
+
+test('ふりがなの書き方を読みとれる', () => {
+  assert.deepStrictEqual(parseRuby('「{大|おお}きい」の はんたい'), [{ text: '「' }, { text: '大', ruby: 'おお' }, { text: 'きい」の はんたい' }]);
+  assert.strictEqual(plainText('「{早|はや}い」'), '「早い」');
+});
+
+test('問題文の漢字には ふりがなが付いている（読み方をきく問題の漢字はのぞく）', () => {
+  const kanji = /[\u4e00-\u9fff]/;
+  for (const q of FIXED) {
+    const bare = parseRuby(q.q).filter((p) => !p.ruby).map((p) => p.text).join('').replace(/「.」の よみかたは/, '');
+    assert.ok(!kanji.test(bare), q.q);
+    if (q.type === 'text') assert.ok(!kanji.test(q.answers[0]), `こたえの1つ目は ひらがな: ${q.q}`);
   }
 });
 

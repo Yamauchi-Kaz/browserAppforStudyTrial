@@ -14,61 +14,63 @@
     science: { name: 'りか', icon: '🔬' },
   };
 
+  // 問題文は小学1年生が読めるように、ひらがなで書く。
+  // 漢字をつかうときは {漢字|よみ} と書くと、ふりがなが付く（例: {大|おお}きい）。
+  // answers の1つ目は、時間ぎれのときに「こたえは〇〇」と見せる書き方（ひらがなにしておく）。
   const FIXED = [
-    // こくご
-    { subject: 'japanese', q: '「山」の読み方は？（ひらがなで）', type: 'text', answers: ['やま', 'さん'], voice: ['山', '3', '三'] },
-    { subject: 'japanese', q: '「川」の読み方は？（ひらがなで）', type: 'text', answers: ['かわ'], voice: ['川', '河', '皮', '革'] },
-    { subject: 'japanese', q: '「大きい」の反対の言葉は？', type: 'text', answers: ['小さい', 'ちいさい'] },
-    { subject: 'japanese', q: '「あつい」の反対の言葉は？（天気のこと）', type: 'text', answers: ['寒い', 'さむい'] },
-    { subject: 'japanese', q: '「花」の読み方は？（ひらがなで）', type: 'text', answers: ['はな'], voice: ['花', '鼻', '華'] },
-    { subject: 'japanese', q: '「早い」の反対の言葉は？', type: 'text', answers: ['遅い', 'おそい'] },
-    { subject: 'japanese', q: '「犬も歩けば○○に当たる」○○に入る言葉は？', type: 'text', answers: ['棒', 'ぼう'], voice: ['某', '坊'] },
-    { subject: 'japanese', q: '「石の上にも○年」○に入る数は？', type: 'number', value: 3 },
-    { subject: 'japanese', q: '「空」の訓読みは？（ひらがなで）', type: 'text', answers: ['そら'], voice: ['空'] },
-    { subject: 'japanese', q: '「明るい」の反対の言葉は？', type: 'text', answers: ['暗い', 'くらい'], voice: ['位', 'クライ'] },
+    // こくご（「山」のように、読み方をきく漢字にはふりがなを付けない）
+    { subject: 'japanese', q: '「山」の よみかたは？（ひらがなで）', type: 'text', answers: ['やま', 'さん'], voice: ['山', '3', '三'] },
+    { subject: 'japanese', q: '「川」の よみかたは？（ひらがなで）', type: 'text', answers: ['かわ'], voice: ['川', '河', '皮', '革'] },
+    { subject: 'japanese', q: '「花」の よみかたは？（ひらがなで）', type: 'text', answers: ['はな'], voice: ['花', '鼻', '華'] },
+    { subject: 'japanese', q: '「空」の よみかたは？（ひらがなで）', type: 'text', answers: ['そら', 'くう', 'から'], voice: ['空'] },
+    { subject: 'japanese', q: '「{大|おお}きい」の はんたいの ことばは？', type: 'text', answers: ['ちいさい', '小さい'] },
+    { subject: 'japanese', q: '「あつい」の はんたいの ことばは？（てんきの こと）', type: 'text', answers: ['さむい', '寒い'] },
+    { subject: 'japanese', q: '「{早|はや}い」の はんたいの ことばは？', type: 'text', answers: ['おそい', '遅い'] },
+    { subject: 'japanese', q: '「あかるい」の はんたいの ことばは？', type: 'text', answers: ['くらい', '暗い'], voice: ['位', 'クライ'] },
+    { subject: 'japanese', q: '「いぬも あるけば ○○に あたる」 ○○に はいる ことばは？', type: 'text', answers: ['ぼう', '棒'], voice: ['某', '坊'] },
+    { subject: 'japanese', q: '「いしの うえにも ○ねん」 ○に はいる かずは？', type: 'number', value: 3 },
 
-    // えいご（日本語で答える）
-    { subject: 'english', q: '「apple」を日本語でいうと？', type: 'text', answers: ['りんご', 'リンゴ', '林檎'] },
-    { subject: 'english', q: '「dog」を日本語でいうと？', type: 'text', answers: ['犬', 'いぬ'] },
-    { subject: 'english', q: '「cat」を日本語でいうと？', type: 'text', answers: ['猫', 'ねこ'] },
-    { subject: 'english', q: '「red」を日本語でいうと？', type: 'text', answers: ['赤', 'あか', '赤色', 'あかいろ', '赤い', 'あかい'] },
-    { subject: 'english', q: '「blue」を日本語でいうと？', type: 'text', answers: ['青', 'あお', '青色', 'あおいろ', '青い', 'あおい'] },
-    { subject: 'english', q: '「water」を日本語でいうと？', type: 'text', answers: ['水', 'みず', 'お水', 'おみず'] },
-    { subject: 'english', q: '「book」を日本語でいうと？', type: 'text', answers: ['本', 'ほん'] },
-    { subject: 'english', q: '「Monday」は何曜日？', type: 'text', answers: ['月曜日', 'げつようび', '月曜', 'げつよう'] },
-    { subject: 'english', q: '「five」は数字でいくつ？', type: 'number', value: 5 },
-    { subject: 'english', q: '「twelve」は数字でいくつ？', type: 'number', value: 12 },
-    { subject: 'english', q: '「teacher」を日本語でいうと？', type: 'text', answers: ['先生', 'せんせい', '教師', 'きょうし'] },
-    { subject: 'english', q: '「school」を日本語でいうと？', type: 'text', answers: ['学校', 'がっこう'] },
-    { subject: 'english', q: '「summer」はどの季節？', type: 'text', answers: ['夏', 'なつ'] },
-    { subject: 'english', q: '「Good morning」を日本語でいうと？', type: 'text', answers: ['おはよう', 'おはようございます'] },
+    // えいご（にほんごで こたえる）
+    { subject: 'english', q: '「apple」を にほんごで いうと？', type: 'text', answers: ['りんご', 'リンゴ', '林檎'] },
+    { subject: 'english', q: '「dog」を にほんごで いうと？', type: 'text', answers: ['いぬ', '犬'] },
+    { subject: 'english', q: '「cat」を にほんごで いうと？', type: 'text', answers: ['ねこ', '猫'] },
+    { subject: 'english', q: '「red」は なにいろ？', type: 'text', answers: ['あか', '赤', '赤色', 'あかいろ', '赤い', 'あかい'] },
+    { subject: 'english', q: '「blue」は なにいろ？', type: 'text', answers: ['あお', '青', '青色', 'あおいろ', '青い', 'あおい'] },
+    { subject: 'english', q: '「water」を にほんごで いうと？', type: 'text', answers: ['みず', '水', 'お水', 'おみず'] },
+    { subject: 'english', q: '「book」を にほんごで いうと？', type: 'text', answers: ['ほん', '本'] },
+    { subject: 'english', q: '「Monday」は なんようび？', type: 'text', answers: ['げつようび', '月曜日', '月曜', 'げつよう'] },
+    { subject: 'english', q: '「five」は すうじで いくつ？', type: 'number', value: 5 },
+    { subject: 'english', q: '「twelve」は すうじで いくつ？', type: 'number', value: 12 },
+    { subject: 'english', q: '「teacher」を にほんごで いうと？', type: 'text', answers: ['せんせい', '先生', '教師', 'きょうし'] },
+    { subject: 'english', q: '「school」を にほんごで いうと？', type: 'text', answers: ['がっこう', '学校'] },
+    { subject: 'english', q: '「summer」は どの きせつ？', type: 'text', answers: ['なつ', '夏'] },
+    { subject: 'english', q: '「Good morning」を にほんごで いうと？', type: 'text', answers: ['おはよう', 'おはようございます'] },
 
-    // しゃかい
-    { subject: 'social', q: '日本の首都はどこ？', type: 'text', answers: ['東京', 'とうきょう', '東京都', 'とうきょうと'] },
-    { subject: 'social', q: '日本でいちばん高い山は？', type: 'text', answers: ['富士山', 'ふじさん', '富士', 'ふじ'] },
-    { subject: 'social', q: '日本でいちばん大きい湖は？', type: 'text', answers: ['琵琶湖', 'びわこ'] },
-    { subject: 'social', q: '日本でいちばん面積が大きい都道府県は？', type: 'text', answers: ['北海道', 'ほっかいどう'] },
-    { subject: 'social', q: '日本の都道府県はいくつある？', type: 'number', value: 47 },
-    { subject: 'social', q: '江戸幕府を開いた人はだれ？', type: 'text', answers: ['徳川家康', 'とくがわいえやす', '家康', 'いえやす'] },
-    { subject: 'social', q: '大阪府の「府庁」がある市は？', type: 'text', answers: ['大阪市', 'おおさかし', '大阪', 'おおさか'] },
-    { subject: 'social', q: '日本でいちばん長い川は？', type: 'text', answers: ['信濃川', 'しなのがわ'] },
-    { subject: 'social', q: 'お米をつくる田んぼのことを漢字2文字で？（すいでん）', type: 'text', answers: ['水田', 'すいでん'] },
-    { subject: 'social', q: '日本の国旗の名前は？', type: 'text', answers: ['日の丸', 'ひのまる', '日章旗', 'にっしょうき'] },
-    { subject: 'social', q: '1年は何か月？', type: 'number', value: 12 },
-    { subject: 'social', q: '火事のときに電話する番号は？', type: 'number', value: 119 },
+    // しゃかい（1ねんせいの せいかつで みぢかな ことを ふやす）
+    { subject: 'social', q: 'にほんの しゅと（いちばん だいじな まち）は どこ？', type: 'text', answers: ['とうきょう', '東京', '東京都', 'とうきょうと'] },
+    { subject: 'social', q: 'にほんで いちばん たかい やまは？', type: 'text', answers: ['ふじさん', '富士山', '富士', 'ふじ'] },
+    { subject: 'social', q: 'にほんで いちばん おおきい みずうみは？', type: 'text', answers: ['びわこ', '琵琶湖'] },
+    { subject: 'social', q: 'にほんの いちばん きたに ある、おおきな しまは？', type: 'text', answers: ['ほっかいどう', '北海道'] },
+    { subject: 'social', q: 'しんごうが あかの ときは、すすむ？ とまる？', type: 'text', answers: ['とまる', '止まる', 'とまります', '止まります'] },
+    { subject: 'social', q: 'みちを わたる ための、しろい しましまの ところは？', type: 'text', answers: ['おうだんほどう', '横断歩道'] },
+    { subject: 'social', q: 'てがみを だす ときに いれる、あかい はこは？', type: 'text', answers: ['ポスト', 'ゆうびんポスト', '郵便ポスト'] },
+    { subject: 'social', q: 'おこめを つくる ところは？（た○○）', type: 'text', answers: ['たんぼ', '田んぼ', '田圃', 'すいでん', '水田'] },
+    { subject: 'social', q: 'にほんの はた（こっき）の なまえは？', type: 'text', answers: ['ひのまる', '日の丸', '日章旗', 'にっしょうき'] },
+    { subject: 'social', q: '1ねんは なんかげつ？', type: 'number', value: 12 },
+    { subject: 'social', q: 'かじの ときに でんわする ばんごうは？', type: 'number', value: 119 },
 
-    // りか
-    { subject: 'science', q: '水がこおると何になる？', type: 'text', answers: ['氷', 'こおり'] },
-    { subject: 'science', q: '水が沸とうすると出てくるものは？（○○○○き）', type: 'text', answers: ['水蒸気', 'すいじょうき', '湯気', 'ゆげ'] },
-    { subject: 'science', q: '昆虫のあしは何本？', type: 'number', value: 6 },
-    { subject: 'science', q: 'クモのあしは何本？', type: 'number', value: 8 },
-    { subject: 'science', q: '太陽がのぼる方角は？', type: 'text', answers: ['東', 'ひがし'] },
-    { subject: 'science', q: '太陽がしずむ方角は？', type: 'text', answers: ['西', 'にし'] },
-    { subject: 'science', q: '植物が日光を受けてでんぷんをつくるはたらきは？', type: 'text', answers: ['光合成', 'こうごうせい'] },
-    { subject: 'science', q: '磁石の2つの極は、N極と何極？', type: 'text', answers: ['S極', 'えすきょく', 'S', 'えす'] },
-    { subject: 'science', q: 'オタマジャクシは大きくなると何になる？', type: 'text', answers: ['カエル', 'かえる', '蛙'], voice: ['帰る', '変える', '返る', '代える'] },
-    { subject: 'science', q: '地球のまわりを回っている星は？', type: 'text', answers: ['月', 'つき'] },
-    { subject: 'science', q: '水は何度でこおる？', type: 'number', value: 0 },
+    // りか（1ねんせいの せいかつで みぢかな ことを ふやす）
+    { subject: 'science', q: 'みずが こおると なにに なる？', type: 'text', answers: ['こおり', '氷'] },
+    { subject: 'science', q: 'おゆが わくと でてくる、しろい けむりの ような ものは？（ゆ○）', type: 'text', answers: ['ゆげ', '湯気', 'すいじょうき', '水蒸気'] },
+    { subject: 'science', q: 'こんちゅうの あしは なんぼん？', type: 'number', value: 6 },
+    { subject: 'science', q: 'クモの あしは なんぼん？', type: 'number', value: 8 },
+    { subject: 'science', q: 'たいようが のぼる ほうがくは？', type: 'text', answers: ['ひがし', '東'] },
+    { subject: 'science', q: 'たいようが しずむ ほうがくは？', type: 'text', answers: ['にし', '西'] },
+    { subject: 'science', q: 'あさがおの たねを まくと、さいしょに でる はっぱは なんまい？', type: 'number', value: 2 },
+    { subject: 'science', q: 'じしゃくの N（エヌ）きょくと くっつくのは、なにきょく？', type: 'text', answers: ['エスきょく', 'S極', 'S', 'えす', 'えすきょく'] },
+    { subject: 'science', q: 'オタマジャクシは おおきく なると なにに なる？', type: 'text', answers: ['かえる', 'カエル', '蛙'], voice: ['帰る', '変える', '返る', '代える'] },
+    { subject: 'science', q: 'よるの そらに みえて、かたちが かわる ものは？', type: 'text', answers: ['つき', '月', 'おつきさま', 'お月様'] },
+    { subject: 'science', q: 'あめの あとに そらに でる、なないろの はしは？', type: 'text', answers: ['にじ', '虹'] },
   ];
 
   function rand(min, max) {
@@ -111,7 +113,24 @@
     };
   }
 
-  const api = { SUBJECTS, FIXED, makeMathQuestion, createQuestionDeck };
+  // 「{大|おお}きい」→ [{ text: '大', ruby: 'おお' }, { text: 'きい' }]
+  function parseRuby(str) {
+    const parts = [];
+    const re = /\{([^|}]+)\|([^}]+)\}/g;
+    let last = 0, m;
+    while ((m = re.exec(str))) {
+      if (m.index > last) parts.push({ text: str.slice(last, m.index) });
+      parts.push({ text: m[1], ruby: m[2] });
+      last = re.lastIndex;
+    }
+    if (last < str.length) parts.push({ text: str.slice(last) });
+    return parts;
+  }
+
+  // ふりがなを外した文（「{大|おお}きい」→「大きい」）
+  const plainText = (str) => parseRuby(str).map((p) => p.text).join('');
+
+  const api = { SUBJECTS, FIXED, makeMathQuestion, createQuestionDeck, parseRuby, plainText };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Questions = api;
 })(typeof window !== 'undefined' ? window : globalThis);

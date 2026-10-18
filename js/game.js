@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const { SUBJECTS, createQuestionDeck } = window.Questions;
+  const { SUBJECTS, createQuestionDeck, parseRuby } = window.Questions;
   const { judge } = window.Judge;
   const Sound = window.Sound;
 
@@ -110,6 +110,20 @@
     }
   }
 
+  // 「{大|おお}きい」のような書き方を、ふりがな付きの文字にして node に入れる
+  function renderRuby(node, str) {
+    node.textContent = '';
+    for (const part of parseRuby(str)) {
+      if (!part.ruby) { node.appendChild(document.createTextNode(part.text)); continue; }
+      const ruby = document.createElement('ruby');
+      ruby.appendChild(document.createTextNode(part.text));
+      const rt = document.createElement('rt');
+      rt.textContent = part.ruby;
+      ruby.appendChild(rt);
+      node.appendChild(ruby);
+    }
+  }
+
   function setFeedback(text, cls) {
     el.feedback.textContent = text;
     el.feedback.className = 'feedback ' + (cls || '');
@@ -141,7 +155,7 @@
     const subjects = [...el.subjectList.querySelectorAll('input:checked')].map((i) => i.value);
     if (subjects.length === 0) {
       Sound.play('wrong');
-      el.start.textContent = 'きょうかを1つ以上えらんでね';
+      el.start.textContent = 'きょうかを 1つ いじょう えらんでね';
       setTimeout(() => { el.start.textContent = 'スタート！'; }, 1500);
       return;
     }
@@ -176,7 +190,7 @@
     if (voiceMode) {
       // スタートボタンを押したタイミングでマイクの許可をもらっておく
       requestMicPermission().then((ok) => {
-        if (!ok) disableVoiceMode('マイクが使えないので、キーボードでこたえてね');
+        if (!ok) disableVoiceMode('マイクが つかえないので、キーボードで こたえてね');
         spawnEnemy();
       });
     } else {
@@ -226,14 +240,14 @@
     battleStage.setDanger(false);
     const subj = SUBJECTS[state.question.subject];
     el.subjectTag.textContent = `${subj.icon} ${subj.name}`;
-    el.question.textContent = state.question.q;
+    renderRuby(el.question, state.question.q);
     replay(el.question, 'appear');
     el.input.value = '';
     el.input.disabled = false;
     if (!state.voiceMode) el.input.focus();
     setFeedback('');
     if (state.voiceMode) {
-      el.heard.textContent = '🎤 きいてるよ… こたえを言ってね';
+      el.heard.textContent = '🎤 きいてるよ… こたえを いってね';
       listener.start();
     }
     state.startedAt = performance.now();
@@ -380,7 +394,7 @@
     list.innerHTML = '';
     for (const m of state.mistakes) {
       const li = document.createElement('li');
-      li.textContent = `${m.q} → ${m.a}`;
+      renderRuby(li, `${m.q} → ${m.a}`);
       list.appendChild(li);
     }
     $('review-panel').hidden = state.mistakes.length === 0;
@@ -450,7 +464,7 @@
         submitAnswer(candidates);
       },
       onFatal() {
-        disableVoiceMode('マイクが使えないので、キーボードでこたえてね');
+        disableVoiceMode('マイクが つかえないので、キーボードで こたえてね');
       },
       onState(on) {
         el.mic.classList.toggle('listening', on);
@@ -467,7 +481,7 @@
       if (!state || state.locked) return;
       if (listener.active) {
         listener.stop();
-        if (state.voiceMode) el.heard.textContent = '🎤 おやすみ中（ボタンでまた聞きはじめるよ）';
+        if (state.voiceMode) el.heard.textContent = '🎤 おやすみちゅう（ボタンで また きくよ）';
       } else {
         el.heard.textContent = '🎤 きいてるよ…';
         listener.start();

@@ -126,7 +126,8 @@ h2 { font-size: 18px; margin: 0 0 10px; color: var(--accent); }
 
 .question-box { background: var(--panel); border-radius: 16px; padding: 14px 16px; }
 .subject-tag { font-size: 14px; color: var(--accent); }
-.question { font-size: clamp(20px, 5vw, 28px); font-weight: bold; margin: 6px 0 12px; line-height: 1.5; }
+.question { font-size: clamp(20px, 5vw, 28px); font-weight: bold; margin: 6px 0 12px; line-height: 1.9; }
+rt { font-size: 0.5em; font-weight: 800; color: var(--accent); }
 .timer { height: 10px; background: rgba(0, 0, 0, 0.4); border-radius: 5px; overflow: hidden; }
 .timer-fill { height: 100%; width: 100%; background: var(--good); }
 .timer-fill.warn { background: var(--accent); }
