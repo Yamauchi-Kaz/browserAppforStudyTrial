@@ -39,6 +39,18 @@ test('おしい判定', () => {
   assert.strictEqual(judge('とうきよ', tokyo).result, 'close');
 });
 
+test('声でこたえたときに漢字に変わっても、読み方の問題は正解', () => {
+  const sora = FIXED.find((q) => q.q.startsWith('「空」'));
+  const hana = FIXED.find((q) => q.q.startsWith('「花」'));
+  const kaeru = FIXED.find((q) => q.q.startsWith('オタマジャクシ'));
+  ok('空', sora);
+  ok('そら', sora);
+  ok('空です', sora);
+  ng('海', sora);
+  ok('鼻', hana);
+  ok('帰る', kaeru);
+});
+
 test('数の答え', () => {
   ok('12', num12);
   ok('１２', num12);
@@ -55,7 +67,7 @@ test('数の答え', () => {
 test('問題データの正解は全部、自分自身で正解になる', () => {
   for (const q of FIXED) {
     if (q.type === 'number') ok(String(q.value), q);
-    else for (const a of q.answers) ok(a, q);
+    else for (const a of q.answers.concat(q.voice || [])) ok(a, q);
   }
   for (let i = 0; i < 200; i++) {
     for (const level of ['easy', 'normal', 'hard']) {

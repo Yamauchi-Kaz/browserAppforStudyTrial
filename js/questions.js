@@ -1,6 +1,8 @@
 // 問題データ
 // type: 'text'   … answers のどれかに合えば正解（漢字・ひらがな・別の言い方を並べておく）
 // type: 'number' … value と同じ数なら正解（「12こ」「十二」などもOK）
+// voice: 声でこたえたとき、音声認識が同じ読みの別の書き方に変えてしまうもの。これも正解にする
+//        （例: 「そら」と言うと「空」になる。読み方の問題では、その漢字そのものも正解にする）
 (function (root) {
   'use strict';
 
@@ -14,16 +16,16 @@
 
   const FIXED = [
     // こくご
-    { subject: 'japanese', q: '「山」の読み方は？（ひらがなで）', type: 'text', answers: ['やま', 'さん'] },
-    { subject: 'japanese', q: '「川」の読み方は？（ひらがなで）', type: 'text', answers: ['かわ'] },
+    { subject: 'japanese', q: '「山」の読み方は？（ひらがなで）', type: 'text', answers: ['やま', 'さん'], voice: ['山', '3', '三'] },
+    { subject: 'japanese', q: '「川」の読み方は？（ひらがなで）', type: 'text', answers: ['かわ'], voice: ['川', '河', '皮', '革'] },
     { subject: 'japanese', q: '「大きい」の反対の言葉は？', type: 'text', answers: ['小さい', 'ちいさい'] },
     { subject: 'japanese', q: '「あつい」の反対の言葉は？（天気のこと）', type: 'text', answers: ['寒い', 'さむい'] },
-    { subject: 'japanese', q: '「花」の読み方は？（ひらがなで）', type: 'text', answers: ['はな'] },
+    { subject: 'japanese', q: '「花」の読み方は？（ひらがなで）', type: 'text', answers: ['はな'], voice: ['花', '鼻', '華'] },
     { subject: 'japanese', q: '「早い」の反対の言葉は？', type: 'text', answers: ['遅い', 'おそい'] },
-    { subject: 'japanese', q: '「犬も歩けば○○に当たる」○○に入る言葉は？', type: 'text', answers: ['棒', 'ぼう'] },
+    { subject: 'japanese', q: '「犬も歩けば○○に当たる」○○に入る言葉は？', type: 'text', answers: ['棒', 'ぼう'], voice: ['某', '坊'] },
     { subject: 'japanese', q: '「石の上にも○年」○に入る数は？', type: 'number', value: 3 },
-    { subject: 'japanese', q: '「空」の訓読みは？（ひらがなで）', type: 'text', answers: ['そら'] },
-    { subject: 'japanese', q: '「明るい」の反対の言葉は？', type: 'text', answers: ['暗い', 'くらい'] },
+    { subject: 'japanese', q: '「空」の訓読みは？（ひらがなで）', type: 'text', answers: ['そら'], voice: ['空'] },
+    { subject: 'japanese', q: '「明るい」の反対の言葉は？', type: 'text', answers: ['暗い', 'くらい'], voice: ['位', 'クライ'] },
 
     // えいご（日本語で答える）
     { subject: 'english', q: '「apple」を日本語でいうと？', type: 'text', answers: ['りんご', 'リンゴ', '林檎'] },
@@ -64,7 +66,7 @@
     { subject: 'science', q: '太陽がしずむ方角は？', type: 'text', answers: ['西', 'にし'] },
     { subject: 'science', q: '植物が日光を受けてでんぷんをつくるはたらきは？', type: 'text', answers: ['光合成', 'こうごうせい'] },
     { subject: 'science', q: '磁石の2つの極は、N極と何極？', type: 'text', answers: ['S極', 'えすきょく', 'S', 'えす'] },
-    { subject: 'science', q: 'オタマジャクシは大きくなると何になる？', type: 'text', answers: ['カエル', 'かえる', '蛙'] },
+    { subject: 'science', q: 'オタマジャクシは大きくなると何になる？', type: 'text', answers: ['カエル', 'かえる', '蛙'], voice: ['帰る', '変える', '返る', '代える'] },
     { subject: 'science', q: '地球のまわりを回っている星は？', type: 'text', answers: ['月', 'つき'] },
     { subject: 'science', q: '水は何度でこおる？', type: 'number', value: 0 },
   ];

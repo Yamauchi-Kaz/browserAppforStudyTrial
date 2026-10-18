@@ -110,7 +110,7 @@
     const n = normalize(input);
     if (!n) return { result: 'wrong' };
     let best = 0;
-    for (const ans of question.answers) {
+    for (const ans of question.answers.concat(question.voice || [])) {
       const na = normalize(ans);
       if (!na) continue;
       if (n === na) return { result: 'correct' };
